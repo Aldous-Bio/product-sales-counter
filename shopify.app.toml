@@ -2,7 +2,7 @@
 
 client_id = "f292808f5d3dd0d10f0a893e6349f3d3"
 name = "Product sales counter"
-application_url = "https://shopify.dev/apps/default-app-home"
+application_url = "https://product-sales-counter.apps.aldous-server.com"
 embedded = true
 
 [access_scopes]
@@ -11,7 +11,7 @@ embedded = true
 scopes = "read_orders"
 
 [auth]
-redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+redirect_urls = [ "https://product-sales-counter.apps.aldous-server.com/auth/callback" ]
 
 [webhooks]
 api_version = "2026-07"
@@ -41,8 +41,8 @@ api_version = "2026-07"
 # A storefront request with no extra path segments beyond prefix/subpath
 # (i.e. exactly /apps/sold-count) is forwarded to this url verbatim, with no
 # path appended — so `url` must already point at the exact backend route
-# (app/routes/proxy.sold-count.tsx -> /proxy/sold-count).
-url = "https://shopify.dev/apps/default-app-home/proxy/sold-count"
+# (app/routes/proxy.sold-count.jsx -> /proxy/sold-count).
+url = "https://product-sales-counter.apps.aldous-server.com/proxy/sold-count"
 subpath = "sold-count"
 prefix = "apps"
 
