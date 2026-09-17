@@ -43,34 +43,43 @@ export default function Dashboard() {
   const navigation = useNavigation();
   const busy = navigation.state !== "idle";
 
+  const backfillStatusEs = {
+    pending: "pendiente",
+    running: "en curso",
+    completed: "completado",
+    failed: "fallido",
+  }[shop.backfillStatus] ?? shop.backfillStatus;
+
   return (
-    <Page title="Product sales counter">
+    <Page title="Contador de ventas por producto">
       <Layout>
         <Layout.Section>
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">
-                Connection
+                Conexión
               </Text>
               <Text as="p">
-                Connected to <strong>{shop.shopDomain}</strong> (timezone {shop.ianaTimezone}).
+                Conectado a <strong>{shop.shopDomain}</strong> (zona horaria {shop.ianaTimezone}).
               </Text>
               <Text as="p">
-                Backfill status: <strong>{shop.backfillStatus}</strong>
-                {shop.backfillCompletedAt ? ` (completed ${new Date(shop.backfillCompletedAt).toLocaleString()})` : ""}
+                Estado de la carga inicial: <strong>{backfillStatusEs}</strong>
+                {shop.backfillCompletedAt
+                  ? ` (completada el ${new Date(shop.backfillCompletedAt).toLocaleString("es-ES")})`
+                  : ""}
               </Text>
               {shop.backfillError ? (
                 <Text as="p" tone="critical">
-                  Backfill error: {shop.backfillError}
+                  Error en la carga inicial: {shop.backfillError}
                 </Text>
               ) : null}
               <Text as="p">
-                Last reconciled:{" "}
-                {shop.lastReconciledAt ? new Date(shop.lastReconciledAt).toLocaleString() : "never"}
+                Última sincronización:{" "}
+                {shop.lastReconciledAt ? new Date(shop.lastReconciledAt).toLocaleString("es-ES") : "nunca"}
               </Text>
               {shop.lastSyncError ? (
                 <Text as="p" tone="critical">
-                  Last sync error: {shop.lastSyncError}
+                  Error de la última sincronización: {shop.lastSyncError}
                 </Text>
               ) : null}
             </BlockStack>
@@ -81,17 +90,17 @@ export default function Dashboard() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">
-                Manual reconciliation
+                Sincronización manual
               </Text>
               <Text as="p">
-                Re-syncs the last 30 days of orders for this shop, correcting any drift from missed or delayed
-                webhooks.
+                Vuelve a sincronizar los últimos 30 días de pedidos de esta tienda, corrigiendo cualquier
+                desajuste por webhooks perdidos o retrasados.
               </Text>
               <InlineStack>
                 <Form method="post">
                   <input type="hidden" name="intent" value="reconcile" />
                   <Button submit loading={busy} variant="primary">
-                    Run reconciliation now
+                    Sincronizar ahora
                   </Button>
                 </Form>
               </InlineStack>
@@ -103,23 +112,24 @@ export default function Dashboard() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">
-                Storefront display
+                Visualización en la tienda
               </Text>
               <Form method="post">
                 <input type="hidden" name="intent" value="toggle-hide-when-zero" />
                 <input type="hidden" name="hideWhenZero" value={(!shop.hideWhenZero).toString()} />
                 <Checkbox
-                  label="Hide the block when a product has 0 units sold in the last 30 days"
+                  label="Ocultar el bloque cuando un producto tenga 0 unidades vendidas en los últimos 30 días"
                   checked={shop.hideWhenZero}
                   onChange={() => {
-                    /* triggers on submit via a real form below */
+                    /* se aplica al enviar el formulario de abajo */
                   }}
                 />
-                <Button submit>{shop.hideWhenZero ? "Show 0 instead" : "Hide when zero"}</Button>
+                <Button submit>{shop.hideWhenZero ? "Mostrar 0 en su lugar" : "Ocultar cuando sea 0"}</Button>
               </Form>
               <Text as="p" tone="subdued">
-                Add the "Units sold" block to your product page from the theme editor: Online Store → Themes →
-                Customize → open a product page → Add block → Apps → Product sales counter.
+                Añade el bloque "Unidades vendidas" a tu ficha de producto desde el editor de temas: Tienda
+                online → Temas → Personalizar → abre una página de producto → Añadir bloque → Apps → Product
+                sales counter.
               </Text>
             </BlockStack>
           </Card>
