@@ -1,0 +1,10 @@
+node_modules
+build
+.shopify
+.git
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-journal
+npm-debug.log

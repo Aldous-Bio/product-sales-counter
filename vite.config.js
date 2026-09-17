@@ -18,6 +18,10 @@ export default defineConfig(() => {
     },
     plugins: [
       remix({
+        // Otherwise Remix's classic file-convention router treats every
+        // file under app/routes/ as a route — including
+        // proxy.sold-count.test.js, which broke the production build.
+        ignoredRouteFiles: ["**/*.test.js"],
         future: {
           v3_fetcherPersist: true,
           v3_relativeSplatPath: true,
