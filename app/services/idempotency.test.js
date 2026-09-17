@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { computeOrderProductDayRows, sumNetUnits, type OrderNode } from "./salesAggregator.server";
+import { computeOrderProductDayRows, sumNetUnits } from "./salesAggregator.server";
 
 /**
- * Mirrors orderSync.server.ts's upsert keyed on (shopDomain, orderId,
+ * Mirrors orderSync.server.js's upsert keyed on (shopDomain, orderId,
  * productId), without a real database, to prove that replaying the same
  * webhook (or re-running reconciliation) never double-counts.
  */
 class FakeOrderProductDayStore {
-  private rows = new Map<string, { netUnits: number }>();
+  rows = new Map();
 
-  upsert(shopDomain: string, row: { orderId: string; productId: string; netUnits: number }) {
+  upsert(shopDomain, row) {
     this.rows.set(`${shopDomain}|${row.orderId}|${row.productId}`, { netUnits: row.netUnits });
   }
 
-  totalNetUnitsFor(shopDomain: string, productId: string): number {
+  totalNetUnitsFor(shopDomain, productId) {
     return sumNetUnits(
       Array.from(this.rows.entries())
         .filter(([key]) => {
@@ -27,7 +27,7 @@ class FakeOrderProductDayStore {
 
 const PRODUCT_A = "gid://shopify/Product/1";
 
-function paidOrder(quantity: number): OrderNode {
+function paidOrder(quantity) {
   return {
     id: "gid://shopify/Order/1",
     createdAt: "2026-06-15T10:00:00Z",
@@ -61,7 +61,7 @@ describe("webhook redelivery idempotency", () => {
     }
     expect(store.totalNetUnitsFor("shop.myshopify.com", PRODUCT_A)).toBe(10);
 
-    const partiallyRefunded: OrderNode = {
+    const partiallyRefunded = {
       id: "gid://shopify/Order/1",
       createdAt: "2026-06-15T10:00:00Z",
       cancelledAt: null,

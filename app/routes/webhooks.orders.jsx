@@ -1,4 +1,3 @@
-import type { ActionFunctionArgs } from "@remix-run/node";
 import prisma from "../db.server";
 import { authenticate, unauthenticated } from "../shopify.server";
 import { refetchAndUpsertOrder } from "../services/orderSync.server";
@@ -6,13 +5,13 @@ import { refetchAndUpsertOrder } from "../services/orderSync.server";
 /**
  * Handles orders/paid, orders/cancelled and orders/updated (all mapped to
  * this one URI in shopify.app.toml). Whatever the topic, we re-fetch the
- * order's current GraphQL state and upsert — see orderSync.server.ts for
+ * order's current GraphQL state and upsert — see orderSync.server.js for
  * why that's both simpler and safely idempotent across retries/duplicates.
  */
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }) => {
   const { shop, topic, payload } = await authenticate.webhook(request);
 
-  const orderGid = (payload as { admin_graphql_api_id?: string }).admin_graphql_api_id;
+  const orderGid = payload.admin_graphql_api_id;
   if (!orderGid) {
     console.warn(`[webhooks/orders] ${topic} for ${shop} missing admin_graphql_api_id`);
     return new Response();
@@ -26,7 +25,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     const { admin } = await unauthenticated.admin(shop);
-    await refetchAndUpsertOrder(shop, { request: (q, o) => admin.graphql(q, o).then((r) => r.json()) }, orderGid, shopRecord.ianaTimezone);
+    await refetchAndUpsertOrder(
+      shop,
+      { request: (q, o) => admin.graphql(q, o).then((r) => r.json()) },
+      orderGid,
+      shopRecord.ianaTimezone,
+    );
   } catch (error) {
     console.error(`[webhooks/orders] ${topic} failed for ${shop} order ${orderGid}`, error);
     await prisma.shop.update({

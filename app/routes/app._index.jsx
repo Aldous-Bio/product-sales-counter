@@ -1,27 +1,17 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useLoaderData, useNavigation } from "@remix-run/react";
-import {
-  BlockStack,
-  Button,
-  Card,
-  Checkbox,
-  InlineStack,
-  Layout,
-  Page,
-  Text,
-} from "@shopify/polaris";
+import { BlockStack, Button, Card, Checkbox, InlineStack, Layout, Page, Text } from "@shopify/polaris";
 import prisma from "../db.server";
 import { runReconciliation } from "../services/backfill.server";
 import { authenticate } from "../shopify.server";
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const shop = await prisma.shop.findUniqueOrThrow({ where: { shopDomain: session.shop } });
   return json({ shop });
 };
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }) => {
   const { session, admin } = await authenticate.admin(request);
   const formData = await request.formData();
   const intent = formData.get("intent");
@@ -49,7 +39,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Dashboard() {
-  const { shop } = useLoaderData<typeof loader>();
+  const { shop } = useLoaderData();
   const navigation = useNavigation();
   const busy = navigation.state !== "idle";
 

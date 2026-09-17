@@ -1,4 +1,3 @@
-import type { ActionFunctionArgs } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 
 /**
@@ -7,7 +6,7 @@ import { authenticate } from "../shopify.server";
  * shopDomain + productId + aggregated quantities), so there's nothing to
  * return — just acknowledge.
  */
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }) => {
   await authenticate.webhook(request);
   return new Response();
 };

@@ -3,18 +3,11 @@
  * days" message. Translation happens here, server-side (App Proxy
  * response), never in Liquid — Liquid has no access to sales data anyway.
  *
- * To add a language: add a `locales/<code>.json`-shaped entry to CATALOG
- * below with a `one` and `other` form. Missing locales fall back to `en`.
+ * To add a language: add an entry to CATALOG below with a `one` and
+ * `other` form. Missing locales fall back to `en`.
  */
 
-export interface SoldMessageCatalogEntry {
-  /** Used when unitsSold === 1. */
-  one: string;
-  /** Used otherwise (0, 2, 3, ...). `{count}` and `{days}` are substituted. */
-  other: string;
-}
-
-const CATALOG: Record<string, SoldMessageCatalogEntry> = {
+const CATALOG = {
   es: {
     one: "{count} unidad vendida en los últimos {days} días",
     other: "{count} unidades vendidas en los últimos {days} días",
@@ -29,7 +22,7 @@ export const DEFAULT_LOCALE = "en";
 export const SUPPORTED_LOCALES = Object.keys(CATALOG);
 
 /** "es-ES", "es-MX", "fr-CA" -> base language "es"/"fr", with a safe fallback. */
-export function resolveLocale(requested: string | null | undefined): string {
+export function resolveLocale(requested) {
   if (!requested) return DEFAULT_LOCALE;
   const base = requested.toLowerCase().split(/[-_]/)[0];
   return CATALOG[base] ? base : DEFAULT_LOCALE;
@@ -41,7 +34,7 @@ export function resolveLocale(requested: string | null | undefined): string {
  * a locale needing more plural categories (e.g. pl, ar) can use
  * `Intl.PluralRules` instead when it's added to CATALOG.
  */
-export function formatSoldMessage(unitsSold: number, periodDays: number, locale: string): string {
+export function formatSoldMessage(unitsSold, periodDays, locale) {
   const resolved = resolveLocale(locale);
   const entry = CATALOG[resolved] ?? CATALOG[DEFAULT_LOCALE];
   const pluralRules = new Intl.PluralRules(resolved);

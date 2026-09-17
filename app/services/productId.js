@@ -1,5 +1,5 @@
 /** Accepts a bare numeric id, a legacy REST id, or a full GID and normalizes to a GID. */
-export function normalizeProductId(rawProductId: string): string | null {
+export function normalizeProductId(rawProductId) {
   const trimmed = rawProductId.trim();
   if (!trimmed) return null;
   if (trimmed.startsWith("gid://shopify/Product/")) return trimmed;

@@ -49,7 +49,7 @@ export const BULK_ORDERS_QUERY = /* GraphQL */ `
   }
 `;
 
-export function buildBulkOrdersQuery(sinceIso: string, untilIso: string): string {
+export function buildBulkOrdersQuery(sinceIso, untilIso) {
   return BULK_ORDERS_QUERY.replace("%SINCE%", sinceIso).replace("%UNTIL%", untilIso);
 }
 
@@ -74,7 +74,7 @@ export const PAGINATED_ORDERS_QUERY = /* GraphQL */ `
   }
 `;
 
-export function buildOrdersSearchQuery(sinceIso: string, untilIso: string): string {
+export function buildOrdersSearchQuery(sinceIso, untilIso) {
   return `created_at:>='${sinceIso}' AND created_at:<='${untilIso}'`;
 }
 

@@ -1,9 +1,5 @@
 import "@shopify/shopify-app-remix/adapters/node";
-import {
-  ApiVersion,
-  AppDistribution,
-  shopifyApp,
-} from "@shopify/shopify-app-remix/server";
+import { ApiVersion, AppDistribution, shopifyApp } from "@shopify/shopify-app-remix/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
 import { SHOP_QUERY } from "./graphql/orders";
@@ -26,9 +22,7 @@ const shopify = shopifyApp({
   hooks: {
     afterAuth: async ({ session, admin }) => {
       const shopResponse = await admin.graphql(SHOP_QUERY);
-      const shopData = (await shopResponse.json()) as {
-        data?: { shop?: { myshopifyDomain: string; ianaTimezone: string } };
-      };
+      const shopData = await shopResponse.json();
       const ianaTimezone = shopData.data?.shop?.ianaTimezone ?? "UTC";
 
       const shop = await prisma.shop.upsert({
@@ -44,9 +38,11 @@ const shopify = shopifyApp({
       if (shop.backfillStatus === "pending" || shop.backfillStatus === "failed") {
         // Fire-and-forget: the merchant sees progress on the dashboard
         // rather than waiting for this to finish before landing in the app.
-        runInitialBackfill(session.shop, { request: (q, o) => admin.graphql(q, o).then((r) => r.json()) }, ianaTimezone).catch(
-          (error) => console.error(`[backfill] ${session.shop} failed`, error),
-        );
+        runInitialBackfill(
+          session.shop,
+          { request: (q, o) => admin.graphql(q, o).then((r) => r.json()) },
+          ianaTimezone,
+        ).catch((error) => console.error(`[backfill] ${session.shop} failed`, error));
       }
     },
   },

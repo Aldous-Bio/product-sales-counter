@@ -1,4 +1,3 @@
-import type { ActionFunctionArgs } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 
 /**
@@ -6,7 +5,7 @@ import { authenticate } from "../shopify.server";
  * This app never stores customer-identifying data at all, so there's
  * nothing to redact — just acknowledge.
  */
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }) => {
   await authenticate.webhook(request);
   return new Response();
 };

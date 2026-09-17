@@ -1,36 +1,12 @@
-import { dayKeyInTimeZone, localMidnightToUtc, type DayKey } from "./timezone.server";
+import { dayKeyInTimeZone, localMidnightToUtc } from "./timezone.server";
 
 /** Order financial statuses we consider "paid or valid for sale". */
 const VALID_FINANCIAL_STATUSES = new Set(["PAID", "PARTIALLY_REFUNDED", "REFUNDED"]);
 
-export interface OrderNodeLineItem {
-  quantity: number;
-  currentQuantity: number;
-  isGiftCard: boolean;
-  product: { id: string } | null;
-}
-
-export interface OrderNode {
-  id: string;
-  createdAt: string;
-  cancelledAt: string | null;
-  displayFinancialStatus: string | null;
-  lineItems: { nodes: OrderNodeLineItem[] };
-}
-
-export interface OrderProductDayRow {
-  orderId: string;
-  productId: string;
-  day: Date;
-  dayKey: DayKey;
-  grossUnits: number;
-  refundedUnits: number;
-  netUnits: number;
-  cancelled: boolean;
-}
-
 /**
- * Turns one order's GraphQL state into the set of OrderProductDay rows it
+ * Turns one order's GraphQL state (`{ id, createdAt, cancelledAt,
+ * displayFinancialStatus, lineItems: { nodes: [{ quantity, currentQuantity,
+ * isGiftCard, product }] } }`) into the set of OrderProductDay rows it
  * should produce, aggregating all line items of the same product (e.g.
  * several variants of one product in the same order).
  *
@@ -41,14 +17,14 @@ export interface OrderProductDayRow {
  * - Line items with no product (custom items) or that are gift cards are
  *   skipped entirely.
  */
-export function computeOrderProductDayRows(order: OrderNode, timeZone: string): OrderProductDayRow[] {
+export function computeOrderProductDayRows(order, timeZone) {
   const isCancelled = order.cancelledAt !== null;
   const isValidSale = !isCancelled && VALID_FINANCIAL_STATUSES.has(order.displayFinancialStatus ?? "");
 
   const dayKey = dayKeyInTimeZone(new Date(order.createdAt), timeZone);
   const day = localMidnightToUtc(dayKey, timeZone);
 
-  const totals = new Map<string, { gross: number; net: number }>();
+  const totals = new Map();
 
   for (const lineItem of order.lineItems.nodes) {
     if (!lineItem.product || lineItem.isGiftCard) continue;
@@ -72,11 +48,7 @@ export function computeOrderProductDayRows(order: OrderNode, timeZone: string): 
   }));
 }
 
-export interface DailySalesRow {
-  netUnits: number;
-}
-
 /** Sum of net units across the rows already restricted to a product + window. */
-export function sumNetUnits(rows: DailySalesRow[]): number {
+export function sumNetUnits(rows) {
   return rows.reduce((total, row) => total + row.netUnits, 0);
 }

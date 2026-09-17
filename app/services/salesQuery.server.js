@@ -4,11 +4,7 @@ import { addDaysToDayKey, localMidnightToUtc, trailingWindow } from "./timezone.
 
 export { normalizeProductId } from "./productId";
 
-export async function getUnitsSoldTrailing30Days(
-  shopDomain: string,
-  productId: string,
-  ianaTimezone: string,
-): Promise<{ unitsSold: number; periodDays: number }> {
+export async function getUnitsSoldTrailing30Days(shopDomain, productId, ianaTimezone) {
   const periodDays = 30;
   const window = trailingWindow(new Date(), ianaTimezone, periodDays);
   // Rows store `day` as the UTC instant of shop-local midnight, so the

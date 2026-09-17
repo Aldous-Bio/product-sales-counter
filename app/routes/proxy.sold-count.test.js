@@ -16,7 +16,7 @@ vi.mock("../services/salesQuery.server", () => ({
 
 const { loader } = await import("./proxy.sold-count");
 
-function makeRequest(query: string) {
+function makeRequest(query) {
   return new Request(`https://app.example.com/apps/sold-count?${query}`);
 }
 
@@ -30,7 +30,7 @@ describe("proxy.sold-count loader", () => {
   it("rejects a request App Proxy could not authenticate (bad/missing HMAC signature)", async () => {
     appProxyMock.mockResolvedValue({ session: null });
 
-    const response = await loader({ request: makeRequest("product_id=123"), params: {}, context: {} } as any);
+    const response = await loader({ request: makeRequest("product_id=123"), params: {}, context: {} });
 
     expect(response.status).toBe(401);
   });
@@ -39,7 +39,7 @@ describe("proxy.sold-count loader", () => {
     appProxyMock.mockResolvedValue({ session: { shop: "some-other-shop.myshopify.com" } });
     shopFindUniqueMock.mockResolvedValue(null);
 
-    const response = await loader({ request: makeRequest("product_id=123"), params: {}, context: {} } as any);
+    const response = await loader({ request: makeRequest("product_id=123"), params: {}, context: {} });
 
     expect(response.status).toBe(404);
   });
@@ -47,7 +47,7 @@ describe("proxy.sold-count loader", () => {
   it("rejects a request missing product_id", async () => {
     appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
 
-    const response = await loader({ request: makeRequest(""), params: {}, context: {} } as any);
+    const response = await loader({ request: makeRequest(""), params: {}, context: {} });
 
     expect(response.status).toBe(400);
   });
@@ -59,7 +59,7 @@ describe("proxy.sold-count loader", () => {
       request: makeRequest("product_id=not-a-real-product"),
       params: {},
       context: {},
-    } as any);
+    });
 
     expect(response.status).toBe(400);
   });
@@ -73,8 +73,8 @@ describe("proxy.sold-count loader", () => {
       request: makeRequest("product_id=123&locale=es-ES"),
       params: {},
       context: {},
-    } as any);
-    const body = (await response.json()) as { message: string; unitsSold: number };
+    });
+    const body = await response.json();
 
     expect(shopFindUniqueMock).toHaveBeenCalledWith({ where: { shopDomain: "shop.myshopify.com" } });
     expect(body.message).toBe("4964 unidades vendidas en los últimos 30 días");

@@ -1,4 +1,3 @@
-import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import prisma from "../db.server";
 import { formatSoldMessage, resolveLocale } from "../i18n/messages";
@@ -15,7 +14,7 @@ import { getUnitsSoldTrailing30Days } from "../services/salesQuery.server";
  * trusts the `shop` query param on its own, and never runs for a shop that
  * isn't installed. No Admin API tokens are ever sent to the browser.
  */
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export const loader = async ({ request }) => {
   const { session } = await authenticate.public.appProxy(request);
   if (!session) {
     return json({ error: "unauthorized" }, { status: 401 });

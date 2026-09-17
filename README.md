@@ -23,24 +23,27 @@ Theme App Extension (extensions/product-sales-counter/)
 
 Liquid never queries sales data directly (it can't) — the block only passes
 `product.id` + `request.locale` to a small JS file, which asks the app's
-backend via App Proxy. See `ARCHITECTURE.md`-style notes inline in
-`app/services/*.server.ts` for the reasoning behind each design choice
+backend via App Proxy. See the comments at the top of each
+`app/services/*.server.js` file for the reasoning behind each design choice
 (timezone bucketing, idempotency key, why `currentQuantity` is used instead
 of manually replaying refunds, etc).
+
+Plain JavaScript throughout (no TypeScript), to match the rest of this
+org's apps.
 
 Key files:
 
 | Concern | File |
 |---|---|
-| Timezone/day bucketing | `app/services/timezone.server.ts` |
-| Sales calculation (pure, tested) | `app/services/salesAggregator.server.ts` |
-| Idempotent DB writes | `app/services/orderSync.server.ts` |
-| Backfill + reconciliation | `app/services/backfill.server.ts` |
-| Window query for the proxy endpoint | `app/services/salesQuery.server.ts` |
-| i18n / pluralization / number formatting | `app/i18n/messages.ts` |
-| Webhooks | `app/routes/webhooks.*.tsx` |
-| App Proxy endpoint | `app/routes/proxy.sold-count.tsx` |
-| Admin dashboard | `app/routes/app._index.tsx` |
+| Timezone/day bucketing | `app/services/timezone.server.js` |
+| Sales calculation (pure, tested) | `app/services/salesAggregator.server.js` |
+| Idempotent DB writes | `app/services/orderSync.server.js` |
+| Backfill + reconciliation | `app/services/backfill.server.js` |
+| Window query for the proxy endpoint | `app/services/salesQuery.server.js` |
+| i18n / pluralization / number formatting | `app/i18n/messages.js` |
+| Webhooks | `app/routes/webhooks.*.jsx` |
+| App Proxy endpoint | `app/routes/proxy.sold-count.jsx` |
+| Admin dashboard | `app/routes/app._index.jsx` |
 | Theme App Extension | `extensions/product-sales-counter/` |
 
 ## Data model (`prisma/schema.prisma`)
@@ -114,7 +117,7 @@ npm run dev
 This runs `shopify app dev`, which tunnels your local server, updates the
 app's URLs, and prints an install link. Open it, install the app on your
 dev store — this triggers the initial 30-day backfill automatically (see
-`hooks.afterAuth` in `app/shopify.server.ts`).
+`hooks.afterAuth` in `app/shopify.server.js`).
 
 ## Installing on a development store
 
@@ -157,7 +160,6 @@ fully idempotent.
 
 ```shell
 npm test        # vitest, 34 tests covering the calculation/timezone/i18n/idempotency/proxy-auth logic
-npm run typecheck
 npm run lint
 ```
 

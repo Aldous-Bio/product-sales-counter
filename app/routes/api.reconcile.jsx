@@ -1,4 +1,3 @@
-import type { ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import prisma from "../db.server";
 import { runReconciliation } from "../services/backfill.server";
@@ -13,7 +12,7 @@ import { unauthenticated } from "../shopify.server";
  * periodically re-sync every installed shop's trailing 30-day window and
  * correct any drift (missed/late webhooks, edits, etc).
  */
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }) => {
   if (request.method !== "POST") {
     return json({ error: "method not allowed" }, { status: 405 });
   }

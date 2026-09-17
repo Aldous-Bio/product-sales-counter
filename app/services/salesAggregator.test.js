@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { computeOrderProductDayRows, sumNetUnits, type OrderNode } from "./salesAggregator.server";
+import { computeOrderProductDayRows, sumNetUnits } from "./salesAggregator.server";
 
 const TZ = "UTC";
 const PRODUCT_A = "gid://shopify/Product/1";
 const PRODUCT_B = "gid://shopify/Product/2";
 
-function order(overrides: Partial<OrderNode>): OrderNode {
+function order(overrides) {
   return {
     id: "gid://shopify/Order/1",
     createdAt: "2026-06-15T10:00:00Z",

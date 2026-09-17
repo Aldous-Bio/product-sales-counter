@@ -5,16 +5,12 @@
  * order into the shop-local *calendar day* it happened on (using
  * Shop.ianaTimezone) and treat "last 30 days" as the last 30 shop-local
  * calendar days, including today. This is what SalesAggregator +
- * OrderProductDay rely on. See ARCHITECTURE.md for the tradeoff vs. a
- * strict rolling window.
+ * OrderProductDay rely on.
  */
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** "YYYY-MM-DD" */
-export type DayKey = string;
-
-function partsInTimeZone(date: Date, timeZone: string) {
+function partsInTimeZone(date, timeZone) {
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone,
     hourCycle: "h23",
@@ -25,9 +21,7 @@ function partsInTimeZone(date: Date, timeZone: string) {
     minute: "2-digit",
     second: "2-digit",
   });
-  const parts = Object.fromEntries(
-    formatter.formatToParts(date).map((p) => [p.type, p.value]),
-  ) as Record<string, string>;
+  const parts = Object.fromEntries(formatter.formatToParts(date).map((p) => [p.type, p.value]));
   return {
     year: Number(parts.year),
     month: Number(parts.month),
@@ -38,8 +32,8 @@ function partsInTimeZone(date: Date, timeZone: string) {
   };
 }
 
-/** The shop-local calendar day (YYYY-MM-DD) that `instant` falls on. */
-export function dayKeyInTimeZone(instant: Date, timeZone: string): DayKey {
+/** The shop-local calendar day ("YYYY-MM-DD") that `instant` falls on. */
+export function dayKeyInTimeZone(instant, timeZone) {
   const { year, month, day } = partsInTimeZone(instant, timeZone);
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
@@ -51,7 +45,7 @@ export function dayKeyInTimeZone(instant: Date, timeZone: string): DayKey {
  * difference. Only misbehaves within a DST-transition instant itself, which
  * is an acceptable approximation for a daily sales aggregate.
  */
-export function localMidnightToUtc(dayKey: DayKey, timeZone: string): Date {
+export function localMidnightToUtc(dayKey, timeZone) {
   const [y, m, d] = dayKey.split("-").map(Number);
   const guess = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
   const local = partsInTimeZone(guess, timeZone);
@@ -60,7 +54,7 @@ export function localMidnightToUtc(dayKey: DayKey, timeZone: string): Date {
   return new Date(guess.getTime() + diff);
 }
 
-export function addDaysToDayKey(dayKey: DayKey, days: number): DayKey {
+export function addDaysToDayKey(dayKey, days) {
   const [y, m, d] = dayKey.split("-").map(Number);
   const date = new Date(Date.UTC(y, m - 1, d));
   date.setUTCDate(date.getUTCDate() + days);
@@ -69,24 +63,14 @@ export function addDaysToDayKey(dayKey: DayKey, days: number): DayKey {
   ).padStart(2, "0")}`;
 }
 
-export interface SalesWindow {
-  /** UTC instant marking the start of the window (inclusive). */
-  startUtc: Date;
-  /** UTC instant marking the end of the window (exclusive) — "now". */
-  endUtc: Date;
-  /** First shop-local day included in the window. */
-  startDayKey: DayKey;
-  /** Last shop-local day included in the window (today). */
-  endDayKey: DayKey;
-}
-
 /**
  * The trailing `days`-day window (default 30), anchored to `now`, expressed
  * both as shop-local day keys (for querying/aggregating OrderProductDay) and
  * as UTC instants (for querying Shopify orders directly, e.g. during
- * backfill).
+ * backfill). Returns
+ * `{ startUtc, endUtc, startDayKey, endDayKey }`.
  */
-export function trailingWindow(now: Date, timeZone: string, days = 30): SalesWindow {
+export function trailingWindow(now, timeZone, days = 30) {
   const endDayKey = dayKeyInTimeZone(now, timeZone);
   const startDayKey = addDaysToDayKey(endDayKey, -(days - 1));
   const startUtc = localMidnightToUtc(startDayKey, timeZone);

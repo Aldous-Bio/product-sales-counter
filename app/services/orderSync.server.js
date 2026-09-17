@@ -1,11 +1,9 @@
 import prisma from "../db.server";
 import { ORDER_BY_ID_QUERY } from "../graphql/orders";
-import { computeOrderProductDayRows, type OrderNode, type OrderProductDayRow } from "./salesAggregator.server";
-
-type GraphqlClient = { request: (query: string, opts?: { variables?: Record<string, unknown> }) => Promise<{ data?: unknown }> };
+import { computeOrderProductDayRows } from "./salesAggregator.server";
 
 /** Upserts a set of rows, keyed by (shopDomain, orderId, productId). Idempotent. */
-export async function upsertOrderProductDayRows(shopDomain: string, rows: OrderProductDayRow[]): Promise<void> {
+export async function upsertOrderProductDayRows(shopDomain, rows) {
   for (const row of rows) {
     await prisma.orderProductDay.upsert({
       where: {
@@ -43,15 +41,9 @@ export async function upsertOrderProductDayRows(shopDomain: string, rows: OrderP
  * source of truth (`currentQuantity`), which makes every handler idempotent
  * and correct regardless of delivery order or duplicate delivery.
  */
-export async function refetchAndUpsertOrder(
-  shopDomain: string,
-  admin: GraphqlClient,
-  orderGid: string,
-  timeZone: string,
-): Promise<OrderProductDayRow[]> {
+export async function refetchAndUpsertOrder(shopDomain, admin, orderGid, timeZone) {
   const response = await admin.request(ORDER_BY_ID_QUERY, { variables: { id: orderGid } });
-  const data = response.data as { order: OrderNode | null } | undefined;
-  const order = data?.order;
+  const order = response.data?.order;
   if (!order) {
     // Order no longer accessible (e.g. fully deleted) — nothing to record.
     return [];
@@ -62,6 +54,6 @@ export async function refetchAndUpsertOrder(
   return rows;
 }
 
-export function orderGidFromLegacyId(legacyId: string | number): string {
+export function orderGidFromLegacyId(legacyId) {
   return `gid://shopify/Order/${legacyId}`;
 }
