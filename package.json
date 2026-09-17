@@ -16,8 +16,8 @@
     "config:use": "shopify app config use",
     "info": "shopify app info",
     "env": "shopify app env",
-    "start": "remix-serve ./build/server/index.js",
-    "setup": "prisma generate && prisma migrate deploy",
+    "start": "npm run setup && remix-serve ./build/server/index.js",
+    "setup": "prisma generate && prisma db push",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "test": "vitest run",
     "test:watch": "vitest"

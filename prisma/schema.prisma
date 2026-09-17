@@ -5,11 +5,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// SQLite is used for local dev. For production, point DATABASE_URL at
-// Postgres/MySQL (provider = "postgresql" / "mysql") so several app
-// instances can share one database.
+// Postgres, so every app instance (and Coolify redeploy) shares one
+// database instead of an ephemeral local file.
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

@@ -92,13 +92,14 @@ and quantities.
 - Node.js ≥ 18.20
 - A Shopify Partner account and a development store
 - The [Shopify CLI](https://shopify.dev/docs/apps/tools/cli) (`npm i -g @shopify/cli` or use `npx shopify`)
+- A Postgres database (a local one for dev, e.g. via Docker, and a managed one in production)
 
 ## Setup
 
 ```shell
 npm install
-cp .env.example .env      # fill in DATABASE_URL / RECONCILE_SECRET; SHOPIFY_* are set by `shopify app dev`
-npx prisma migrate deploy # or: npm run setup
+cp .env.example .env   # fill in DATABASE_URL / RECONCILE_SECRET; SHOPIFY_* are set by `shopify app dev`
+npm run setup          # prisma generate + prisma db push (creates the tables in DATABASE_URL)
 ```
 
 > **Note on `app_proxy.url`:** `shopify.app.toml`'s `application_url` is
