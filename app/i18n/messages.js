@@ -16,6 +16,21 @@ const CATALOG = {
     one: "{count} unit sold in the last {days} days",
     other: "{count} units sold in the last {days} days",
   },
+  fr: {
+    // French pluralizes 0 and 1 as "one" (Intl.PluralRules('fr').select(0) === "one"),
+    // which this template already handles correctly.
+    one: "{count} unité vendue au cours des {days} derniers jours",
+    other: "{count} unités vendues au cours des {days} derniers jours",
+  },
+  pt: {
+    // Portuguese pluralizes 0 and 1 as "one", same as French.
+    one: "{count} unidade vendida nos últimos {days} dias",
+    other: "{count} unidades vendidas nos últimos {days} dias",
+  },
+  it: {
+    one: "{count} unità venduta negli ultimi {days} giorni",
+    other: "{count} unità vendute negli ultimi {days} giorni",
+  },
 };
 
 export const DEFAULT_LOCALE = "en";

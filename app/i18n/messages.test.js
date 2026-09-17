@@ -5,10 +5,11 @@ describe("resolveLocale", () => {
   it("falls back to a supported base language from a region-qualified locale", () => {
     expect(resolveLocale("es-MX")).toBe("es");
     expect(resolveLocale("en-GB")).toBe("en");
+    expect(resolveLocale("fr-CA")).toBe("fr");
   });
 
   it("falls back to the default locale for an unsupported/missing language", () => {
-    expect(resolveLocale("fr-FR")).toBe("en");
+    expect(resolveLocale("de-DE")).toBe("en"); // German isn't in the catalog yet
     expect(resolveLocale(null)).toBe("en");
     expect(resolveLocale(undefined)).toBe("en");
     expect(resolveLocale("")).toBe("en");
@@ -31,5 +32,23 @@ describe("formatSoldMessage", () => {
 
   it("uses a region-qualified locale's base language", () => {
     expect(formatSoldMessage(1, 30, "es-ES")).toBe("1 unidad vendida en los últimos 30 días");
+  });
+
+  it("pluralizes correctly in French, including 0 as singular", () => {
+    expect(formatSoldMessage(1, 30, "fr")).toBe("1 unité vendue au cours des 30 derniers jours");
+    expect(formatSoldMessage(0, 30, "fr")).toBe("0 unité vendue au cours des 30 derniers jours");
+    expect(formatSoldMessage(23, 30, "fr")).toBe("23 unités vendues au cours des 30 derniers jours");
+  });
+
+  it("pluralizes correctly in Portuguese, including 0 as singular", () => {
+    expect(formatSoldMessage(1, 30, "pt")).toBe("1 unidade vendida nos últimos 30 dias");
+    expect(formatSoldMessage(0, 30, "pt")).toBe("0 unidade vendida nos últimos 30 dias");
+    expect(formatSoldMessage(23, 30, "pt")).toBe("23 unidades vendidas nos últimos 30 dias");
+  });
+
+  it("pluralizes correctly in Italian, with 0 as plural", () => {
+    expect(formatSoldMessage(1, 30, "it")).toBe("1 unità venduta negli ultimi 30 giorni");
+    expect(formatSoldMessage(0, 30, "it")).toBe("0 unità vendute negli ultimi 30 giorni");
+    expect(formatSoldMessage(23, 30, "it")).toBe("23 unità vendute negli ultimi 30 giorni");
   });
 });
