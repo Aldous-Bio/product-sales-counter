@@ -124,7 +124,9 @@ dev store — this triggers the initial 30-day backfill automatically (see
 
 1. `npm run dev` and follow the printed install URL (or `npm run deploy`
    then install from your Partner Dashboard for a persistent install).
-2. Approve the `read_orders` scope.
+2. Approve the `read_orders` and `read_products` scopes (the latter is
+   needed because `LineItem.product` requires it, even though we never
+   otherwise touch product data).
 3. The app dashboard (`/app`) shows connection status and backfill
    progress — refresh until `backfillStatus` is `completed`.
 4. In the store admin, go to **Online Store → Themes → Customize**, open a

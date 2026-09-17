@@ -1,6 +1,7 @@
 import prisma from "../db.server";
 import { authenticate, unauthenticated } from "../shopify.server";
 import { orderGidFromLegacyId, refetchAndUpsertOrder } from "../services/orderSync.server";
+import { describeError } from "../services/backfill.server";
 
 /** refunds/create: re-derive the parent order's rows (see orderSync.server.js). */
 export const action = async ({ request }) => {
@@ -32,7 +33,7 @@ export const action = async ({ request }) => {
     console.error(`[webhooks/refunds] failed for ${shop} order ${orderGid}`, error);
     await prisma.shop.update({
       where: { shopDomain: shop },
-      data: { lastSyncError: error instanceof Error ? error.message : String(error) },
+      data: { lastSyncError: describeError(error) },
     });
   }
 

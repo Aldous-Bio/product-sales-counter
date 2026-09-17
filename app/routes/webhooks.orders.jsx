@@ -1,6 +1,7 @@
 import prisma from "../db.server";
 import { authenticate, unauthenticated } from "../shopify.server";
 import { refetchAndUpsertOrder } from "../services/orderSync.server";
+import { describeError } from "../services/backfill.server";
 
 /**
  * Handles orders/paid, orders/cancelled and orders/updated (all mapped to
@@ -35,7 +36,7 @@ export const action = async ({ request }) => {
     console.error(`[webhooks/orders] ${topic} failed for ${shop} order ${orderGid}`, error);
     await prisma.shop.update({
       where: { shopDomain: shop },
-      data: { lastSyncError: error instanceof Error ? error.message : String(error) },
+      data: { lastSyncError: describeError(error) },
     });
   }
 

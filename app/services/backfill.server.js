@@ -5,6 +5,20 @@ import { upsertOrderProductDayRows } from "./orderSync.server";
 import { trailingWindow } from "./timezone.server";
 
 /**
+ * The Admin API client wraps GraphQL-level errors (bad field, missing
+ * scope, etc.) in a generic "review graphQLErrors for details" message —
+ * pull the actual reason out so it's useful in Shop.backfillError /
+ * lastSyncError instead of that boilerplate.
+ */
+export function describeError(error) {
+  const graphQLErrors = error?.response?.errors?.graphQLErrors;
+  if (Array.isArray(graphQLErrors) && graphQLErrors.length > 0) {
+    return graphQLErrors.map((e) => e.message).join("; ");
+  }
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
  * Walks every order in the trailing 30-day window and upserts its
  * OrderProductDay rows. Used both for the initial backfill on install and
  * for periodic/manual reconciliation — the only difference is bookkeeping
@@ -67,7 +81,7 @@ export async function runInitialBackfill(shopDomain, admin, timeZone) {
       where: { shopDomain },
       data: {
         backfillStatus: "failed",
-        backfillError: error instanceof Error ? error.message : String(error),
+        backfillError: describeError(error),
       },
     });
     throw error;
@@ -84,7 +98,7 @@ export async function runReconciliation(shopDomain, admin, timeZone) {
   } catch (error) {
     await prisma.shop.update({
       where: { shopDomain },
-      data: { lastSyncError: error instanceof Error ? error.message : String(error) },
+      data: { lastSyncError: describeError(error) },
     });
     throw error;
   }

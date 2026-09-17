@@ -6,9 +6,11 @@ application_url = "https://product-sales-counter.apps.aldous-server.com"
 embedded = true
 
 [access_scopes]
-# read_orders is the only scope needed: we only ever read order/refund data to
-# aggregate quantities. We never write orders, customers, products, etc.
-scopes = "read_orders"
+# read_orders: read order/refund data to aggregate quantities.
+# read_products: LineItem.product (needed to know which product a line item
+# belongs to) requires this scope in addition to read_orders, even though
+# we never otherwise touch product data. We never write anything.
+scopes = "read_orders,read_products"
 
 [auth]
 redirect_urls = [ "https://product-sales-counter.apps.aldous-server.com/auth/callback" ]

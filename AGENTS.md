@@ -37,9 +37,11 @@ explícitamente.
    que existe de verdad en la versión estable actual (ahora mismo
    `2026-07`, ver `[webhooks] api_version` en `shopify.app.toml`). No te
    inventes nombres de campos — búscalos en shopify.dev.
-3. Este proyecto usa `read_orders` como único scope. Si necesitas un scope
-   nuevo, justifícalo explícitamente antes de añadirlo — la app no debe
-   pedir permisos que no usa.
+3. Este proyecto usa `read_orders` y `read_products` (este último porque
+   `LineItem.product` lo exige, aunque no tocamos datos de producto por
+   ningún otro motivo). Si necesitas un scope nuevo, justifícalo
+   explícitamente antes de añadirlo — la app no debe pedir permisos que no
+   usa.
 
 ## Reglas de la lógica de negocio (no las rompas sin darte cuenta)
 
