@@ -7,29 +7,32 @@
  * `other` form. Missing locales fall back to `en`.
  */
 
+// Deliberately terse: the product page context already makes clear these
+// are units of this product, so we don't spell out "unit(s)" — just
+// "<count> sold in the last <days> days", to avoid crowding the page.
 const CATALOG = {
   es: {
-    one: "{count} unidad vendida en los últimos {days} días",
-    other: "{count} unidades vendidas en los últimos {days} días",
+    one: "{count} vendida en los últimos {days} días",
+    other: "{count} vendidas en los últimos {days} días",
   },
   en: {
-    one: "{count} unit sold in the last {days} days",
-    other: "{count} units sold in the last {days} days",
+    one: "{count} sold in the last {days} days",
+    other: "{count} sold in the last {days} days",
   },
   fr: {
     // French pluralizes 0 and 1 as "one" (Intl.PluralRules('fr').select(0) === "one"),
     // which this template already handles correctly.
-    one: "{count} unité vendue au cours des {days} derniers jours",
-    other: "{count} unités vendues au cours des {days} derniers jours",
+    one: "{count} vendue ces {days} derniers jours",
+    other: "{count} vendues ces {days} derniers jours",
   },
   pt: {
     // Portuguese pluralizes 0 and 1 as "one", same as French.
-    one: "{count} unidade vendida nos últimos {days} dias",
-    other: "{count} unidades vendidas nos últimos {days} dias",
+    one: "{count} vendida nos últimos {days} dias",
+    other: "{count} vendidas nos últimos {days} dias",
   },
   it: {
-    one: "{count} unità venduta negli ultimi {days} giorni",
-    other: "{count} unità vendute negli ultimi {days} giorni",
+    one: "{count} venduta negli ultimi {days} giorni",
+    other: "{count} vendute negli ultimi {days} giorni",
   },
 };
 
