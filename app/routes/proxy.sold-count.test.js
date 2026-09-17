@@ -77,7 +77,7 @@ describe("proxy.sold-count loader", () => {
     const body = await response.json();
 
     expect(shopFindUniqueMock).toHaveBeenCalledWith({ where: { shopDomain: "shop.myshopify.com" } });
-    expect(body.message).toBe("4964 unidades vendidas en los últimos 30 días");
+    expect(body.message).toBe("4964 vendidas en los últimos 30 días");
     expect(body.unitsSold).toBe(4964);
   });
 });
