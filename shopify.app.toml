@@ -1,0 +1,50 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "f292808f5d3dd0d10f0a893e6349f3d3"
+name = "Product sales counter"
+application_url = "https://shopify.dev/apps/default-app-home"
+embedded = true
+
+[access_scopes]
+# read_orders is the only scope needed: we only ever read order/refund data to
+# aggregate quantities. We never write orders, customers, products, etc.
+scopes = "read_orders"
+
+[auth]
+redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+
+[webhooks]
+api_version = "2026-07"
+
+  [[webhooks.subscriptions]]
+  topics = [ "orders/paid", "orders/cancelled", "orders/updated" ]
+  uri = "/webhooks/orders"
+
+  [[webhooks.subscriptions]]
+  topics = [ "refunds/create" ]
+  uri = "/webhooks/refunds"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  # Mandatory GDPR/privacy compliance webhooks. We store no personal data
+  # (only shopDomain + productId + aggregated quantities), so these handlers
+  # only need to acknowledge the request and, for shop/redact, wipe the
+  # shop's aggregated sales rows.
+  [webhooks.privacy_compliance]
+  customer_deletion_url = "/webhooks/customers/redact"
+  customer_data_request_url = "/webhooks/customers/data_request"
+  shop_deletion_url = "/webhooks/shop/redact"
+
+[app_proxy]
+# A storefront request with no extra path segments beyond prefix/subpath
+# (i.e. exactly /apps/sold-count) is forwarded to this url verbatim, with no
+# path appended — so `url` must already point at the exact backend route
+# (app/routes/proxy.sold-count.tsx -> /proxy/sold-count).
+url = "https://shopify.dev/apps/default-app-home/proxy/sold-count"
+subpath = "sold-count"
+prefix = "apps"
+
+[build]
+automatically_update_urls_on_dev = true

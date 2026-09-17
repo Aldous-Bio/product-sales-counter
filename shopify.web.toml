@@ -1,0 +1,11 @@
+# Tells the Shopify CLI there's a web (Remix) process at the project root
+# that needs a dev tunnel, so it can substitute application_url / webhook
+# uris with the live tunnel URL before pushing config. Without this file the
+# CLI treats the project as extension-only (as it was before this app had a
+# backend) and never rewrites the placeholder application_url.
+name = "product-sales-counter"
+roles = ["frontend", "backend"]
+webhooks_path = "/webhooks"
+
+[commands]
+dev = "npm exec remix vite:dev"

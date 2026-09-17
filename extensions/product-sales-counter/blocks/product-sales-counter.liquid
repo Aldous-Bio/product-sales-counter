@@ -1,0 +1,34 @@
+{% comment %}
+  Renders nothing on its own: the real unitsSold figure only exists in the
+  app's database (Liquid cannot query orders/Analytics), so this block just
+  passes the current product + locale to the app via a data attribute and
+  lets product-sales-counter.js ask the app's App Proxy endpoint for the
+  text to display.
+{% endcomment %}
+<div
+  class="product-sales-counter"
+  data-product-sales-counter
+  data-product-id="{{ product.id }}"
+  data-locale="{{ request.locale.iso_code }}"
+  data-show-zero="{{ block.settings.show_zero }}"
+  aria-live="polite"
+  {{ block.shopify_attributes }}
+></div>
+
+{{ 'product-sales-counter.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'product-sales-counter.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "t:name",
+  "target": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_zero",
+      "label": "t:settings.show_zero.label",
+      "default": false
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// SQLite is used for local dev. For production, point DATABASE_URL at
+// Postgres/MySQL (provider = "postgresql" / "mysql") so several app
+// instances can share one database.
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Shopify session storage (required by @shopify/shopify-app-session-storage-prisma).
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+// One row per shop. Tracks connection + backfill/reconciliation state so the
+// admin dashboard has something to show without re-querying Shopify.
+model Shop {
+  shopDomain           String    @id
+  ianaTimezone         String    @default("UTC")
+  hideWhenZero         Boolean   @default(true)
+  installedAt          DateTime  @default(now())
+  uninstalledAt        DateTime?
+  backfillStatus        String    @default("pending") // pending | running | completed | failed
+  backfillCursor         String?   // bulk operation id, to resume an interrupted backfill
+  backfillStartedAt      DateTime?
+  backfillCompletedAt    DateTime?
+  backfillError          String?
+  lastReconciledAt       DateTime?
+  lastSyncError          String?
+}
+
+// The net contribution of ONE order to ONE product on ONE (shop-local) day.
+// Re-processing the same order/refund is a pure upsert against
+// (shopDomain, orderId, productId) so replayed webhooks and repeated
+// reconciliation passes never double-count.
+model OrderProductDay {
+  id            String   @id @default(cuid())
+  shopDomain    String
+  orderId       String // Shopify order GID, e.g. gid://shopify/Order/123
+  productId     String // Shopify product GID, e.g. gid://shopify/Product/456
+  day           DateTime // UTC midnight of the shop-local calendar day
+  grossUnits    Int      @default(0)
+  refundedUnits Int      @default(0)
+  netUnits      Int      @default(0)
+  cancelled     Boolean  @default(false)
+  updatedAt     DateTime @updatedAt
+
+  // (shopDomain, orderId, productId) is the idempotency key: every write
+  // (webhook, backfill or reconciliation) re-derives the row's absolute
+  // gross/refunded/net values from the order's current GraphQL state and
+  // upserts on this key, so replayed webhooks or repeated reconciliation
+  // passes overwrite rather than double-count.
+  @@unique([shopDomain, orderId, productId])
+  @@index([shopDomain, productId, day])
+}

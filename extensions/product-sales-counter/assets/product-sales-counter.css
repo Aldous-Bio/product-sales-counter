@@ -1,0 +1,9 @@
+.product-sales-counter {
+  min-height: 1.25em;
+}
+
+.product-sales-counter__text {
+  margin: 0;
+  font-size: 0.9em;
+  color: var(--color-foreground, #303030);
+}

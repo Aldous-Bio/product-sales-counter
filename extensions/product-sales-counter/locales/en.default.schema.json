@@ -1,0 +1,8 @@
+{
+  "name": "Units sold",
+  "settings": {
+    "show_zero": {
+      "label": "Show the block even when 0 units were sold"
+    }
+  }
+}

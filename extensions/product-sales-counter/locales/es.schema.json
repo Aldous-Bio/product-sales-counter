@@ -1,0 +1,8 @@
+{
+  "name": "Unidades vendidas",
+  "settings": {
+    "show_zero": {
+      "label": "Mostrar el bloque aunque se hayan vendido 0 unidades"
+    }
+  }
+}
