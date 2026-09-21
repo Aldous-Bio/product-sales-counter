@@ -1,6 +1,6 @@
 import { json } from "@remix-run/node";
 import { Form, useLoaderData, useNavigation, useSubmit } from "@remix-run/react";
-import { BlockStack, Button, Card, Checkbox, InlineStack, Layout, Page, Select, Text } from "@shopify/polaris";
+import { BlockStack, Box, Button, Card, Checkbox, InlineStack, Layout, Page, Select, Text } from "@shopify/polaris";
 import prisma from "../db.server";
 import { runReconciliation } from "../services/backfill.server";
 import { authenticate } from "../shopify.server";
@@ -169,6 +169,7 @@ export default function Dashboard() {
           </Card>
         </Layout.Section>
       </Layout>
+      <Box paddingBlockEnd="800" />
     </Page>
   );
 }
