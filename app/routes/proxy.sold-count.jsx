@@ -3,7 +3,7 @@ import prisma from "../db.server";
 import { formatSoldMessage, resolveLocale } from "../i18n/messages";
 import { authenticate } from "../shopify.server";
 import { normalizeProductId } from "../services/productId";
-import { getUnitsSoldTrailing30Days } from "../services/salesQuery.server";
+import { getUnitsSoldInTrailingWindow } from "../services/salesQuery.server";
 
 /**
  * GET /apps/sold-count?product_id=...&locale=...
@@ -38,7 +38,12 @@ export const loader = async ({ request }) => {
     return json({ error: "shop not found" }, { status: 404 });
   }
 
-  const { unitsSold, periodDays } = await getUnitsSoldTrailing30Days(session.shop, productId, shop.ianaTimezone);
+  const { unitsSold, periodDays } = await getUnitsSoldInTrailingWindow(
+    session.shop,
+    productId,
+    shop.ianaTimezone,
+    shop.windowDays,
+  );
 
   return json({
     productId: rawProductId,

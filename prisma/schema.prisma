@@ -39,6 +39,7 @@ model Shop {
   shopDomain           String    @id
   ianaTimezone         String    @default("UTC")
   hideWhenZero         Boolean   @default(true)
+  windowDays           Int       @default(30) // trailing-window length used by sync + storefront display
   installedAt          DateTime  @default(now())
   uninstalledAt        DateTime?
   backfillStatus        String    @default("pending") // pending | running | completed | failed

@@ -4,8 +4,7 @@ import { addDaysToDayKey, localMidnightToUtc, trailingWindow } from "./timezone.
 
 export { normalizeProductId } from "./productId";
 
-export async function getUnitsSoldTrailing30Days(shopDomain, productId, ianaTimezone) {
-  const periodDays = 30;
+export async function getUnitsSoldInTrailingWindow(shopDomain, productId, ianaTimezone, periodDays = 30) {
   const window = trailingWindow(new Date(), ianaTimezone, periodDays);
   // Rows store `day` as the UTC instant of shop-local midnight, so the
   // window bounds must be computed the same way rather than assuming UTC.

@@ -11,7 +11,7 @@ vi.mock("../db.server", () => ({
   default: { shop: { findUnique: shopFindUniqueMock } },
 }));
 vi.mock("../services/salesQuery.server", () => ({
-  getUnitsSoldTrailing30Days: getUnitsSoldMock,
+  getUnitsSoldInTrailingWindow: getUnitsSoldMock,
 }));
 
 const { loader } = await import("./proxy.sold-count");

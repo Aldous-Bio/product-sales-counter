@@ -1,9 +1,11 @@
 import { json } from "@remix-run/node";
 import { Form, useLoaderData, useNavigation, useSubmit } from "@remix-run/react";
-import { BlockStack, Button, Card, Checkbox, InlineStack, Layout, Page, Text } from "@shopify/polaris";
+import { BlockStack, Button, Card, Checkbox, InlineStack, Layout, Page, Select, Text } from "@shopify/polaris";
 import prisma from "../db.server";
 import { runReconciliation } from "../services/backfill.server";
 import { authenticate } from "../shopify.server";
+
+const WINDOW_DAYS_OPTIONS = [7, 14, 30, 60, 90];
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
@@ -32,6 +34,13 @@ export const action = async ({ request }) => {
   if (intent === "toggle-hide-when-zero") {
     const hideWhenZero = formData.get("hideWhenZero") === "true";
     await prisma.shop.update({ where: { shopDomain: session.shop }, data: { hideWhenZero } });
+  }
+
+  if (intent === "set-window-days") {
+    const windowDays = WINDOW_DAYS_OPTIONS.includes(Number(formData.get("windowDays")))
+      ? Number(formData.get("windowDays"))
+      : 30;
+    await prisma.shop.update({ where: { shopDomain: session.shop }, data: { windowDays } });
   }
 
   const shop = await prisma.shop.findUniqueOrThrow({ where: { shopDomain: session.shop } });
@@ -94,8 +103,8 @@ export default function Dashboard() {
                 Sincronización manual
               </Text>
               <Text as="p">
-                Vuelve a sincronizar los últimos 30 días de pedidos de esta tienda, corrigiendo cualquier
-                desajuste por webhooks perdidos o retrasados.
+                Vuelve a sincronizar los últimos {shop.windowDays} días de pedidos de esta tienda,
+                corrigiendo cualquier desajuste por webhooks perdidos o retrasados.
               </Text>
               <InlineStack>
                 <Form method="post">
@@ -113,10 +122,36 @@ export default function Dashboard() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">
+                Periodo de cálculo
+              </Text>
+              <Text as="p">
+                Número de días hacia atrás que se tienen en cuenta para contar las ventas. Se aplica tanto
+                a la sincronización manual y automática como al número que se muestra en la tienda.
+              </Text>
+              <Select
+                label="Días a considerar"
+                labelHidden
+                options={WINDOW_DAYS_OPTIONS.map((days) => ({ label: `${days} días`, value: String(days) }))}
+                value={String(shop.windowDays)}
+                onChange={(value) => {
+                  const formData = new FormData();
+                  formData.set("intent", "set-window-days");
+                  formData.set("windowDays", value);
+                  submit(formData, { method: "post" });
+                }}
+              />
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="300">
+              <Text as="h2" variant="headingMd">
                 Visualización en la tienda
               </Text>
               <Checkbox
-                label="Ocultar el bloque cuando un producto tenga 0 unidades vendidas en los últimos 30 días"
+                label={`Ocultar el bloque cuando un producto tenga 0 unidades vendidas en los últimos ${shop.windowDays} días`}
                 checked={shop.hideWhenZero}
                 onChange={(checked) => {
                   const formData = new FormData();

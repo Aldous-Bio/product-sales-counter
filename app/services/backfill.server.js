@@ -29,7 +29,7 @@ export function describeError(error) {
  * mid-run can continue instead of restarting from scratch.
  */
 export async function syncTrailingWindow(shopDomain, admin, timeZone, options = {}) {
-  const window = trailingWindow(new Date(), timeZone);
+  const window = trailingWindow(new Date(), timeZone, options.windowDays);
   const searchQuery = buildOrdersSearchQuery(window.startUtc.toISOString(), window.endUtc.toISOString());
 
   let cursor = options.resumeCursor ?? null;
@@ -66,7 +66,10 @@ export async function runInitialBackfill(shopDomain, admin, timeZone) {
   });
 
   try {
-    await syncTrailingWindow(shopDomain, admin, timeZone, { resumeCursor: shop?.backfillCursor });
+    await syncTrailingWindow(shopDomain, admin, timeZone, {
+      resumeCursor: shop?.backfillCursor,
+      windowDays: shop?.windowDays,
+    });
     await prisma.shop.update({
       where: { shopDomain },
       data: {
@@ -90,8 +93,8 @@ export async function runInitialBackfill(shopDomain, admin, timeZone) {
 
 export async function runReconciliation(shopDomain, admin, timeZone) {
   try {
-    await syncTrailingWindow(shopDomain, admin, timeZone);
     const shop = await prisma.shop.findUnique({ where: { shopDomain } });
+    await syncTrailingWindow(shopDomain, admin, timeZone, { windowDays: shop?.windowDays });
     const clearStaleBackfillFailure =
       shop?.backfillStatus === "pending" || shop?.backfillStatus === "failed";
     await prisma.shop.update({
