@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { Form, useLoaderData, useNavigation } from "@remix-run/react";
+import { Form, useLoaderData, useNavigation, useSubmit } from "@remix-run/react";
 import { BlockStack, Button, Card, Checkbox, InlineStack, Layout, Page, Text } from "@shopify/polaris";
 import prisma from "../db.server";
 import { runReconciliation } from "../services/backfill.server";
@@ -41,6 +41,7 @@ export const action = async ({ request }) => {
 export default function Dashboard() {
   const { shop } = useLoaderData();
   const navigation = useNavigation();
+  const submit = useSubmit();
   const busy = navigation.state !== "idle";
 
   const backfillStatusEs = {
@@ -114,18 +115,16 @@ export default function Dashboard() {
               <Text as="h2" variant="headingMd">
                 Visualización en la tienda
               </Text>
-              <Form method="post">
-                <input type="hidden" name="intent" value="toggle-hide-when-zero" />
-                <input type="hidden" name="hideWhenZero" value={(!shop.hideWhenZero).toString()} />
-                <Checkbox
-                  label="Ocultar el bloque cuando un producto tenga 0 unidades vendidas en los últimos 30 días"
-                  checked={shop.hideWhenZero}
-                  onChange={() => {
-                    /* se aplica al enviar el formulario de abajo */
-                  }}
-                />
-                <Button submit>{shop.hideWhenZero ? "Mostrar 0 en su lugar" : "Ocultar cuando sea 0"}</Button>
-              </Form>
+              <Checkbox
+                label="Ocultar el bloque cuando un producto tenga 0 unidades vendidas en los últimos 30 días"
+                checked={shop.hideWhenZero}
+                onChange={(checked) => {
+                  const formData = new FormData();
+                  formData.set("intent", "toggle-hide-when-zero");
+                  formData.set("hideWhenZero", checked.toString());
+                  submit(formData, { method: "post" });
+                }}
+              />
               <Text as="p" tone="subdued">
                 Añade el bloque "Unidades vendidas" a tu ficha de producto desde el editor de temas: Tienda
                 online → Temas → Personalizar → abre una página de producto → Añadir bloque → Apps → Product

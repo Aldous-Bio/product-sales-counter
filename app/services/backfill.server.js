@@ -91,9 +91,18 @@ export async function runInitialBackfill(shopDomain, admin, timeZone) {
 export async function runReconciliation(shopDomain, admin, timeZone) {
   try {
     await syncTrailingWindow(shopDomain, admin, timeZone);
+    const shop = await prisma.shop.findUnique({ where: { shopDomain } });
+    const clearStaleBackfillFailure =
+      shop?.backfillStatus === "pending" || shop?.backfillStatus === "failed";
     await prisma.shop.update({
       where: { shopDomain },
-      data: { lastReconciledAt: new Date(), lastSyncError: null },
+      data: {
+        lastReconciledAt: new Date(),
+        lastSyncError: null,
+        ...(clearStaleBackfillFailure
+          ? { backfillStatus: "completed", backfillError: null, backfillCompletedAt: new Date() }
+          : {}),
+      },
     });
   } catch (error) {
     await prisma.shop.update({
