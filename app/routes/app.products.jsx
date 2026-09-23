@@ -108,6 +108,12 @@ export const action = async ({ request }) => {
   return json({ ok: true });
 };
 
+// Long product names are cut with an ellipsis (full name on hover) so the
+// table fits the page without horizontal scroll. ~480px is what the other
+// columns + thumbnail + paddings need; the name gets the rest, capped so
+// rows stay compact on wide screens.
+const PRODUCT_TITLE_MAX_WIDTH = "min(460px, max(120px, calc(100vw - 480px)))";
+
 const STATUS_BADGES = {
   DRAFT: { tone: undefined, label: "Borrador" },
   ARCHIVED: { tone: undefined, label: "Archivado" },
@@ -159,12 +165,14 @@ function ProductRow({ row, index }) {
           ) : (
             <Box width="40px" minHeight="40px" background="bg-surface-secondary" borderRadius="200" />
           )}
-          <BlockStack gap="050" inlineAlign="start">
-            <Text as="span" fontWeight="medium" tone={visible ? undefined : "subdued"}>
-              {row.title}
-            </Text>
-            {statusBadge ? <Badge tone={statusBadge.tone}>{statusBadge.label}</Badge> : null}
-          </BlockStack>
+          <div style={{ maxWidth: PRODUCT_TITLE_MAX_WIDTH, minWidth: 0 }} title={row.title}>
+            <BlockStack gap="050" inlineAlign="start">
+              <Text as="p" fontWeight="medium" tone={visible ? undefined : "subdued"} truncate>
+                {row.title}
+              </Text>
+              {statusBadge ? <Badge tone={statusBadge.tone}>{statusBadge.label}</Badge> : null}
+            </BlockStack>
+          </div>
         </InlineStack>
       </IndexTable.Cell>
       <IndexTable.Cell>
@@ -173,7 +181,7 @@ function ProductRow({ row, index }) {
         </Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Box maxWidth="140px">
+        <Box width="120px">
           <TextField
             label={`Unidades de prueba para ${row.title}`}
             labelHidden
