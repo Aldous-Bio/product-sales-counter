@@ -51,6 +51,22 @@ model Shop {
   lastSyncError          String?
 }
 
+// Per-product display overrides set from the admin "Productos" page. A
+// product with no row uses the defaults (counter shown, real sales). Holds
+// no customer data — only which products hide the counter and an optional
+// test figure.
+model ProductDisplaySetting {
+  shopDomain   String
+  productId    String // Shopify product GID
+  hidden       Boolean  @default(false) // never show the counter for this product
+  // Test figure shown instead of real sales ONLY inside the theme editor
+  // (request.design_mode), never on the live storefront. null = off.
+  previewUnits Int?
+  updatedAt    DateTime @updatedAt
+
+  @@id([shopDomain, productId])
+}
+
 // The net contribution of ONE order to ONE product on ONE (shop-local) day.
 // Re-processing the same order/refund is a pure upsert against
 // (shopDomain, orderId, productId) so replayed webhooks and repeated

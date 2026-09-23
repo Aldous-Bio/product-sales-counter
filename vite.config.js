@@ -1,6 +1,12 @@
 import { vitePlugin as remix } from "@remix-run/dev";
 import { defineConfig } from "vite";
 
+// Recent Shopify CLI versions pass the dev tunnel URL to this process as
+// APP_URL/HOST, no longer as SHOPIFY_APP_URL, which app/shopify.server.js
+// (and production, via Coolify env vars) relies on. Dev-only: this file
+// isn't loaded by `remix-serve` in production.
+process.env.SHOPIFY_APP_URL ||= process.env.APP_URL || process.env.HOST || "";
+
 export default defineConfig(() => {
   const host = process.env.SHOPIFY_APP_URL ? new URL(process.env.SHOPIFY_APP_URL).hostname : undefined;
 

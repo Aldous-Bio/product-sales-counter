@@ -4,22 +4,40 @@ import { addDaysToDayKey, localMidnightToUtc, trailingWindow } from "./timezone.
 
 export { normalizeProductId } from "./productId";
 
-export async function getUnitsSoldInTrailingWindow(shopDomain, productId, ianaTimezone, periodDays = 30) {
+/**
+ * `day` filter for the trailing window. Rows store `day` as the UTC instant
+ * of shop-local midnight, so the bounds must be computed the same way
+ * rather than assuming UTC.
+ */
+function windowDayFilter(ianaTimezone, periodDays) {
   const window = trailingWindow(new Date(), ianaTimezone, periodDays);
-  // Rows store `day` as the UTC instant of shop-local midnight, so the
-  // window bounds must be computed the same way rather than assuming UTC.
-  const startOfWindow = localMidnightToUtc(window.startDayKey, ianaTimezone);
-  const startOfDayAfterWindow = localMidnightToUtc(addDaysToDayKey(window.endDayKey, 1), ianaTimezone);
+  return {
+    gte: localMidnightToUtc(window.startDayKey, ianaTimezone),
+    lt: localMidnightToUtc(addDaysToDayKey(window.endDayKey, 1), ianaTimezone),
+  };
+}
 
+export async function getUnitsSoldInTrailingWindow(shopDomain, productId, ianaTimezone, periodDays = 30) {
   const rows = await prisma.orderProductDay.findMany({
     where: {
       shopDomain,
       productId,
       cancelled: false,
-      day: { gte: startOfWindow, lt: startOfDayAfterWindow },
+      day: windowDayFilter(ianaTimezone, periodDays),
     },
     select: { netUnits: true },
   });
 
   return { unitsSold: Math.max(0, sumNetUnits(rows)), periodDays };
+}
+
+/** Same metric as getUnitsSoldInTrailingWindow, for every product of the shop at once (admin table). */
+export async function getUnitsSoldByProduct(shopDomain, ianaTimezone, periodDays = 30) {
+  const groups = await prisma.orderProductDay.groupBy({
+    by: ["productId"],
+    where: { shopDomain, cancelled: false, day: windowDayFilter(ianaTimezone, periodDays) },
+    _sum: { netUnits: true },
+  });
+
+  return new Map(groups.map((group) => [group.productId, Math.max(0, group._sum.netUnits ?? 0)]));
 }

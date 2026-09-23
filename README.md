@@ -49,7 +49,13 @@ Key files:
 ## Data model (`prisma/schema.prisma`)
 
 - `Shop` — one row per installed shop: timezone, backfill/reconciliation
-  status, the "hide when zero" default.
+  status, the "hide when zero" default and the trailing window length.
+- `ProductDisplaySetting` — per-product overrides from the admin
+  "Productos" page (`app/routes/app.products.jsx`): `hidden` (never show the
+  counter; sales are still synced, the proxy answers `{ hidden: true }`)
+  and `previewUnits` (a test figure used **only** inside the theme editor,
+  via `request.design_mode`; shoppers always see real sales). Only products
+  that differ from the defaults have a row.
 - `OrderProductDay` — one row per **(shop, order, product)**, tagged with
   the shop-local calendar day the order was created on, storing
   `grossUnits` / `refundedUnits` / `netUnits`. The unique constraint on
@@ -115,7 +121,13 @@ npm run setup          # prisma generate + prisma db push (creates the tables in
 npm run dev
 ```
 
-This runs `shopify app dev`, which tunnels your local server, updates the
+This first starts a local Postgres with `prisma dev` (no Docker needed;
+stop it with `npm run dev:db:stop`) and syncs the schema, so `.env` needs
+`DATABASE_URL="postgres://postgres:postgres@localhost:51214/template1?sslmode=disable&connection_limit=1&pgbouncer=true"`
+(`pgbouncer=true` stops Prisma from using prepared statements, which
+`prisma dev` can't isolate between connections: without it the second
+`db push` fails with `prepared statement "s0" already exists`).
+Then it runs `shopify app dev`, which tunnels your local server, updates the
 app's URLs, and prints an install link. Open it, install the app on your
 dev store — this triggers the initial 30-day backfill automatically (see
 `hooks.afterAuth` in `app/shopify.server.js`).

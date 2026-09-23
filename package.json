@@ -9,7 +9,9 @@
   "scripts": {
     "shopify": "shopify",
     "build": "remix vite:build",
-    "dev": "shopify app dev",
+    "dev": "npm run dev:db && npm run setup && shopify app dev",
+    "dev:db": "prisma dev --name product-sales-counter --port 51213 --db-port 51214 --shadow-db-port 51215 --detach",
+    "dev:db:stop": "prisma dev stop product-sales-counter",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",
     "deploy": "shopify app deploy",

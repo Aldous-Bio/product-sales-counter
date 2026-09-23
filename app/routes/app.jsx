@@ -22,6 +22,7 @@ export default function AppLayout() {
         <Link to="/app" rel="home">
           Product sales counter
         </Link>
+        <Link to="/app/products">Productos</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>

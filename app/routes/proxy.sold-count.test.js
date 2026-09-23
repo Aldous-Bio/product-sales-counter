@@ -3,12 +3,16 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 const appProxyMock = vi.fn();
 const shopFindUniqueMock = vi.fn();
 const getUnitsSoldMock = vi.fn();
+const settingFindUniqueMock = vi.fn();
 
 vi.mock("../shopify.server", () => ({
   authenticate: { public: { appProxy: appProxyMock } },
 }));
 vi.mock("../db.server", () => ({
-  default: { shop: { findUnique: shopFindUniqueMock } },
+  default: {
+    shop: { findUnique: shopFindUniqueMock },
+    productDisplaySetting: { findUnique: settingFindUniqueMock },
+  },
 }));
 vi.mock("../services/salesQuery.server", () => ({
   getUnitsSoldInTrailingWindow: getUnitsSoldMock,
@@ -25,6 +29,8 @@ describe("proxy.sold-count loader", () => {
     appProxyMock.mockReset();
     shopFindUniqueMock.mockReset();
     getUnitsSoldMock.mockReset();
+    settingFindUniqueMock.mockReset();
+    settingFindUniqueMock.mockResolvedValue(null);
   });
 
   it("rejects a request App Proxy could not authenticate (bad/missing HMAC signature)", async () => {
@@ -62,6 +68,48 @@ describe("proxy.sold-count loader", () => {
     });
 
     expect(response.status).toBe(400);
+  });
+
+  it("hides a product the merchant unticked, without computing its sales", async () => {
+    appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
+    shopFindUniqueMock.mockResolvedValue({ shopDomain: "shop.myshopify.com", ianaTimezone: "UTC", hideWhenZero: false });
+    settingFindUniqueMock.mockResolvedValue({ hidden: true, previewUnits: null });
+
+    const response = await loader({ request: makeRequest("product_id=123"), params: {}, context: {} });
+    const body = await response.json();
+
+    expect(settingFindUniqueMock).toHaveBeenCalledWith({
+      where: { shopDomain_productId: { shopDomain: "shop.myshopify.com", productId: "gid://shopify/Product/123" } },
+    });
+    expect(body).toEqual({ productId: "123", hidden: true });
+    expect(getUnitsSoldMock).not.toHaveBeenCalled();
+  });
+
+  it("uses the product's test figure only for theme-editor (preview=1) requests", async () => {
+    appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
+    shopFindUniqueMock.mockResolvedValue({
+      shopDomain: "shop.myshopify.com",
+      ianaTimezone: "UTC",
+      hideWhenZero: true,
+      windowDays: 30,
+    });
+    settingFindUniqueMock.mockResolvedValue({ hidden: false, previewUnits: 1250 });
+    getUnitsSoldMock.mockResolvedValue({ unitsSold: 3, periodDays: 30 });
+
+    const editor = await loader({
+      request: makeRequest("product_id=123&locale=es&preview=1"),
+      params: {},
+      context: {},
+    });
+    const editorBody = await editor.json();
+    expect(editorBody.unitsSold).toBe(1250);
+    expect(editorBody.preview).toBe(true);
+    expect(getUnitsSoldMock).not.toHaveBeenCalled();
+
+    const live = await loader({ request: makeRequest("product_id=123&locale=es"), params: {}, context: {} });
+    const liveBody = await live.json();
+    expect(liveBody.unitsSold).toBe(3);
+    expect(liveBody.preview).toBe(false);
   });
 
   it("returns the localized message scoped to the authenticated shop only", async () => {

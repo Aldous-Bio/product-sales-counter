@@ -4,6 +4,9 @@
   passes the current product + locale to the app via a data attribute and
   lets product-sales-counter.js ask the app's App Proxy endpoint for the
   text to display.
+
+  data-design-mode is only true inside the theme editor, where the admin's
+  "test units" replace the real count; shoppers never see them.
 {% endcomment %}
 <div
   class="product-sales-counter"
@@ -11,6 +14,7 @@
   data-product-id="{{ product.id }}"
   data-locale="{{ request.locale.iso_code }}"
   data-show-zero="{{ block.settings.show_zero }}"
+  data-design-mode="{{ request.design_mode }}"
   aria-live="polite"
   {{ block.shopify_attributes }}
 ></div>

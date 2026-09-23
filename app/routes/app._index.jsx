@@ -1,6 +1,6 @@
 import { json } from "@remix-run/node";
 import { Form, useLoaderData, useNavigation, useSubmit } from "@remix-run/react";
-import { BlockStack, Box, Button, Card, Checkbox, InlineStack, Layout, Page, Select, Text } from "@shopify/polaris";
+import { BlockStack, Box, Button, Card, InlineStack, Layout, Page, Select, Text } from "@shopify/polaris";
 import prisma from "../db.server";
 import { runReconciliation } from "../services/backfill.server";
 import { authenticate } from "../shopify.server";
@@ -30,11 +30,6 @@ export const action = async ({ request }) => {
     } catch (error) {
       console.error(`[reconcile] manual run failed for ${session.shop}`, error);
     }
-  }
-
-  if (intent === "toggle-hide-when-zero") {
-    const hideWhenZero = formData.get("hideWhenZero") === "true";
-    await prisma.shop.update({ where: { shopDomain: session.shop }, data: { hideWhenZero } });
   }
 
   if (intent === "set-window-days") {
@@ -149,18 +144,15 @@ export default function Dashboard() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">
-                Visualización en la tienda
+                Productos
               </Text>
-              <Checkbox
-                label={`Ocultar el bloque cuando un producto tenga 0 unidades vendidas en los últimos ${shop.windowDays} días`}
-                checked={shop.hideWhenZero}
-                onChange={(checked) => {
-                  const formData = new FormData();
-                  formData.set("intent", "toggle-hide-when-zero");
-                  formData.set("hideWhenZero", checked.toString());
-                  submit(formData, { method: "post" });
-                }}
-              />
+              <Text as="p">
+                Elige en qué productos se muestra el contador, consulta sus ventas y prueba cifras en el editor
+                de temas.
+              </Text>
+              <InlineStack>
+                <Button url="/app/products">Gestionar productos</Button>
+              </InlineStack>
               <Text as="p" tone="subdued">
                 Añade el bloque "Unidades vendidas" a tu ficha de producto desde el editor de temas: Tienda
                 online → Temas → Personalizar → abre una página de producto → Añadir bloque → Apps → Product
