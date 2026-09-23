@@ -52,19 +52,6 @@ const CATALOG = {
       days: "in the past {days} days",
     },
   },
-  fr: {
-    // French pluralizes 0 and 1 as "one" (Intl.PluralRules('fr').select(0) === "one"),
-    // which this template already handles correctly.
-    sold: { one: "{count} vendue", other: "{count} vendues" },
-    periods: {
-      week: "cette dernière semaine",
-      twoWeeks: "ces 2 dernières semaines",
-      month: "ce dernier mois",
-      twoMonths: "ces 2 derniers mois",
-      quarter: "ce dernier trimestre",
-      days: "ces {days} derniers jours",
-    },
-  },
   pt: {
     // Portuguese pluralizes 0 and 1 as "one", same as French.
     sold: { one: "{count} vendida", other: "{count} vendidas" },
@@ -86,6 +73,19 @@ const CATALOG = {
       twoMonths: "negli ultimi 2 mesi",
       quarter: "nell'ultimo trimestre",
       days: "negli ultimi {days} giorni",
+    },
+  },
+  fr: {
+    // French pluralizes 0 and 1 as "one" (Intl.PluralRules('fr').select(0) === "one"),
+    // which this template already handles correctly.
+    sold: { one: "{count} vendue", other: "{count} vendues" },
+    periods: {
+      week: "cette dernière semaine",
+      twoWeeks: "ces 2 dernières semaines",
+      month: "ce dernier mois",
+      twoMonths: "ces 2 derniers mois",
+      quarter: "ce dernier trimestre",
+      days: "ces {days} derniers jours",
     },
   },
 };
