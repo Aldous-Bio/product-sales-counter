@@ -42,7 +42,7 @@ export const loader = async ({ request }) => {
   const setting = await prisma.productDisplaySetting.findUnique({
     where: { shopDomain_productId: { shopDomain: session.shop, productId } },
   });
-  const display = resolveProductDisplay(setting, url.searchParams);
+  const display = resolveProductDisplay(setting, url.searchParams, shop);
 
   // Products the merchant unticked never show the counter, whatever the
   // block's "show zero" setting — so there's no need to compute the number.
@@ -50,8 +50,8 @@ export const loader = async ({ request }) => {
     return json({ productId: rawProductId, hidden: true });
   }
 
-  // A test figure only comes back for theme-editor requests (see
-  // productDisplay.js), so shoppers on the live storefront get real sales.
+  // A test figure only comes back where no real shopper can see it (theme
+  // editor, unpublished themes, development stores — see productDisplay.js).
   const preview = display.previewUnits !== null;
   const { unitsSold, periodDays } = preview
     ? { unitsSold: display.previewUnits, periodDays: shop.windowDays }

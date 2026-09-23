@@ -36,6 +36,12 @@ describe("resolveProductDisplay", () => {
     expect(resolveProductDisplay({ hidden: false, previewUnits: 0 }, editor).previewUnits).toBe(0);
   });
 
+  it("applies the test figure on any theme of a development store", () => {
+    const setting = { hidden: false, previewUnits: 25 };
+    expect(resolveProductDisplay(setting, live, { isDevelopmentStore: true }).previewUnits).toBe(25);
+    expect(resolveProductDisplay(setting, live, { isDevelopmentStore: false }).previewUnits).toBeNull();
+  });
+
   it("hides the product everywhere when hidden, test figure or not", () => {
     const setting = { hidden: true, previewUnits: 25 };
     expect(resolveProductDisplay(setting, editor)).toEqual({ hidden: true, previewUnits: null });

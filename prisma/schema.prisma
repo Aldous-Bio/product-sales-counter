@@ -40,6 +40,10 @@ model Shop {
   ianaTimezone         String    @default("UTC")
   hideWhenZero         Boolean   @default(true)
   windowDays           Int       @default(30) // trailing-window length used by sync + storefront display
+  // Shopify partner development store (shop.plan.partnerDevelopment): it
+  // can't take real orders from real customers, so test units may show on
+  // its storefront. Refreshed on every auth.
+  isDevelopmentStore   Boolean   @default(false)
   installedAt          DateTime  @default(now())
   uninstalledAt        DateTime?
   backfillStatus        String    @default("pending") // pending | running | completed | failed

@@ -226,9 +226,11 @@ export default function Products() {
                 Marca en qué productos se muestra el contador: {visibleCount} de {rows.length} lo muestran.
               </Text>
               <Text as="p" tone="subdued">
-                <strong>Unidades de prueba:</strong> sustituyen a las ventas reales solo dentro del editor de
-                temas, para ver cómo queda el bloque en tu tema. Los compradores de la tienda publicada siempre
-                ven las ventas reales. Déjalo vacío para usar las ventas reales también en el editor.
+                <strong>Unidades de prueba:</strong>{" "}
+                {shop.isDevelopmentStore
+                  ? "esta es una tienda de desarrollo, así que sustituyen a las ventas reales en todos sus temas."
+                  : "sustituyen a las ventas reales solo en el editor de temas y en los temas no publicados (vista previa). En el tema publicado los compradores siempre ven las ventas reales."}{" "}
+                Déjalo vacío para usar las ventas reales.
               </Text>
               <Checkbox
                 label="Ocultar el contador en los productos con 0 unidades vendidas"
