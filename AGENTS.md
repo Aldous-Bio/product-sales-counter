@@ -61,8 +61,9 @@ explícitamente.
   `OrderProductDay` o `Shop`, comprueba que sigue siendo así.
 - Los mensajes al comprador se traducen en el backend
   (`app/i18n/messages.js`), nunca en Liquid. Si añades un idioma, añade una
-  entrada `{ one, other }` al catálogo — no hardcodees el texto en el
-  bloque de tema.
+  entrada con `sold: { one, other }` y todas las claves de `periods` al
+  catálogo — no hardcodees el texto en el bloque de tema. Si añades una
+  opción al selector de días, añádela también a `PERIOD_KEYS`.
 
 ## Base de datos
 

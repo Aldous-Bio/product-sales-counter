@@ -1,6 +1,6 @@
 import { json } from "@remix-run/node";
 import prisma from "../db.server";
-import { formatSoldMessage, resolveLocale } from "../i18n/messages";
+import { formatSoldMessage, formatSoldMessageParts, resolveLocale } from "../i18n/messages";
 import { authenticate } from "../shopify.server";
 import { normalizeProductId } from "../services/productId";
 import { getUnitsSoldInTrailingWindow } from "../services/salesQuery.server";
@@ -52,5 +52,6 @@ export const loader = async ({ request }) => {
     locale,
     hideWhenZero: shop.hideWhenZero,
     message: formatSoldMessage(unitsSold, periodDays, locale),
+    messageParts: formatSoldMessageParts(unitsSold, periodDays, locale),
   });
 };

@@ -31,7 +31,18 @@
 
         var text = document.createElement("p");
         text.className = "product-sales-counter__text";
-        text.textContent = data.message;
+        // messageParts lets the backend bold the count without sending
+        // HTML; fall back to the plain message if it's missing.
+        var parts = data.messageParts || [{ text: data.message, strong: false }];
+        parts.forEach(function (part) {
+          if (part.strong) {
+            var strong = document.createElement("strong");
+            strong.textContent = part.text;
+            text.appendChild(strong);
+          } else {
+            text.appendChild(document.createTextNode(part.text));
+          }
+        });
         container.replaceChildren(text);
       })
       .catch(function (error) {

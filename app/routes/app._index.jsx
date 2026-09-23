@@ -5,6 +5,7 @@ import prisma from "../db.server";
 import { runReconciliation } from "../services/backfill.server";
 import { authenticate } from "../shopify.server";
 
+// Each option has a natural-language phrase in app/i18n/messages.js (PERIOD_KEYS).
 const WINDOW_DAYS_OPTIONS = [7, 14, 30, 60, 90];
 
 export const loader = async ({ request }) => {
