@@ -53,7 +53,7 @@ Key files:
 - `ProductDisplaySetting` — per-product overrides from the admin
   "Productos" page (`app/routes/app.products.jsx`): `hidden` (never show the
   counter; sales are still synced, the proxy answers `{ hidden: true }`).
-  `previewUnits` is the table's editable "Unidades de prueba" column; the
+  `previewUnits` is the table's editable "Unidades simuladas" column; the
   storefront reads and uses it on real stores.
 - `OrderProductDay` — one row per **(shop, order, product)**, tagged with
   the shop-local calendar day the order was created on, storing

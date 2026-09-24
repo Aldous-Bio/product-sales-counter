@@ -171,7 +171,7 @@ function ProductRow({ row, index }) {
       <IndexTable.Cell>
         <Box width="120px">
           <TextField
-            label={`Unidades de prueba para ${row.title}`}
+            label={`Unidades simuladas para ${row.title}`}
             labelHidden
             type="number"
             min={0}
@@ -253,7 +253,7 @@ export default function Products() {
                 { title: "Mostrar" },
                 { title: "Producto" },
                 { title: `Vendidas (${shop.windowDays} días)`, alignment: "end" },
-                { title: "Unidades de prueba" },
+                { title: "Unidades simuladas" },
               ]}
               emptyState={
                 <Box padding="400">

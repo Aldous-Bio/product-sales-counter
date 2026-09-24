@@ -7,7 +7,7 @@
 export const MAX_PREVIEW_UNITS = 1_000_000;
 
 /**
- * "Unidades de prueba" column of the admin table: form value -> non-negative
+ * "Unidades simuladas" column of the admin table: form value -> non-negative
  * integer, or null when the field is emptied. Stored in
  * ProductDisplaySetting.previewUnits; the storefront doesn't read it.
  */
