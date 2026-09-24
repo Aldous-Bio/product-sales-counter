@@ -14,28 +14,21 @@
     if (!productId) return;
 
     var params = new URLSearchParams({ product_id: productId, locale: locale });
-    // Theme editor / non-published theme only: lets the backend show the
-    // admin's test figure. Never set on the published theme.
-    // if (container.getAttribute("data-test-context") === "true") {
-      console.log("dsahjdbashjbdjhasd")
-      params.set("preview", "1");
-    // }
 
     fetch("/apps/sold-count?" + params.toString(), {
       headers: { Accept: "application/json" },
     })
-      .then(function (response) {        
+      .then(function (response) {
         if (!response.ok)
           throw new Error("sold-count request failed: " + response.status);
         return response.json();
       })
       .then(function (data) {
-        // `hidden`: the merchant excluded this product in the app admin,
-        // which wins over the block's "show zero" setting.
+        // `hidden`: the merchant unticked this product in the app's
+        // "Productos" table, which wins over the block's "show zero" setting.
         var shouldHide =
           data.hidden ||
           (data.unitsSold === 0 && data.hideWhenZero && !forceShowZero);
-        console.log("data", shouldHide);
         if (shouldHide) {
           container.remove();
           return;
@@ -47,6 +40,7 @@
         // messageParts lets the backend bold the count without sending
         // HTML; fall back to the plain message if it's missing.
         var parts = data.messageParts || [{ text: data.message, strong: false }];
+        console.log("datos partes", parts)
         parts.forEach(function (part) {
           if (part.strong) {
             var strong = document.createElement("strong");

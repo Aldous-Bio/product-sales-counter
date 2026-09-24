@@ -52,10 +52,9 @@ Key files:
   status, the "hide when zero" default and the trailing window length.
 - `ProductDisplaySetting` — per-product overrides from the admin
   "Productos" page (`app/routes/app.products.jsx`): `hidden` (never show the
-  counter; sales are still synced, the proxy answers `{ hidden: true }`)
-  and `previewUnits` (a test figure used **only** inside the theme editor,
-  via `request.design_mode`; shoppers always see real sales). Only products
-  that differ from the defaults have a row.
+  counter; sales are still synced, the proxy answers `{ hidden: true }`).
+  `previewUnits` is the table's editable "Unidades de prueba" column; the
+  storefront reads and uses it on real stores.
 - `OrderProductDay` — one row per **(shop, order, product)**, tagged with
   the shop-local calendar day the order was created on, storing
   `grossUnits` / `refundedUnits` / `netUnits`. The unique constraint on

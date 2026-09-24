@@ -101,25 +101,29 @@ export function resolveLocale(requested) {
 }
 
 /**
- * Renders the localized sold message as parts, so the storefront can
- * bold the count ("**600 vendidas** en el último mes") without ever
- * injecting HTML. Pluralization is a simple one/other split; a locale
- * needing more plural categories (e.g. pl, ar) can extend `sold` when it's
- * added to CATALOG.
+ * Renders the localized sold message as parts.
+ * Uses previewUnits when provided; otherwise falls back to unitsSold.
+ * The displayed count is also used for pluralization and number formatting.
  */
-export function formatSoldMessageParts(unitsSold, periodDays, locale) {
+export function formatSoldMessageParts(unitsSold, periodDays, locale, previewUnits) {
   const resolved = resolveLocale(locale);
   const entry = CATALOG[resolved] ?? CATALOG[DEFAULT_LOCALE];
-  const category = new Intl.PluralRules(resolved).select(unitsSold);
-  const formattedCount = new Intl.NumberFormat(resolved).format(unitsSold);
+
+  const displayUnits = previewUnits ?? unitsSold;
+
+  const category = new Intl.PluralRules(resolved).select(displayUnits);
+  const formattedCount = new Intl.NumberFormat(resolved).format(displayUnits);
+
   const sold = (category === "one" ? entry.sold.one : entry.sold.other).replace(
     "{count}",
     formattedCount,
   );
+
   const period = entry.periods[PERIOD_KEYS[periodDays] ?? "days"].replace(
     "{days}",
     String(periodDays),
   );
+
   return [
     { text: sold, strong: true },
     { text: ` ${period}`, strong: false },
@@ -127,8 +131,8 @@ export function formatSoldMessageParts(unitsSold, periodDays, locale) {
 }
 
 /** Plain-text version of formatSoldMessageParts. */
-export function formatSoldMessage(unitsSold, periodDays, locale) {
-  return formatSoldMessageParts(unitsSold, periodDays, locale)
+export function formatSoldMessage(unitsSold, periodDays, locale, previewUnits) {
+  return formatSoldMessageParts(unitsSold, periodDays, locale, previewUnits)
     .map((part) => part.text)
     .join("");
 }

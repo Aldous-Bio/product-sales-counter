@@ -24,12 +24,11 @@ const shopify = shopifyApp({
       const shopResponse = await admin.graphql(SHOP_QUERY);
       const shopData = await shopResponse.json();
       const ianaTimezone = shopData.data?.shop?.ianaTimezone ?? "UTC";
-      const isDevelopmentStore = shopData.data?.shop?.plan?.partnerDevelopment === true;
 
       const shop = await prisma.shop.upsert({
         where: { shopDomain: session.shop },
-        create: { shopDomain: session.shop, ianaTimezone, isDevelopmentStore, uninstalledAt: null },
-        update: { ianaTimezone, isDevelopmentStore, uninstalledAt: null },
+        create: { shopDomain: session.shop, ianaTimezone, uninstalledAt: null },
+        update: { ianaTimezone, uninstalledAt: null },
       });
 
       // Webhook subscriptions are declared in shopify.app.toml and managed

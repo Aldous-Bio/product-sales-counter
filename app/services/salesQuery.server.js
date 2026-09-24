@@ -17,18 +17,41 @@ function windowDayFilter(ianaTimezone, periodDays) {
   };
 }
 
-export async function getUnitsSoldInTrailingWindow(shopDomain, productId, ianaTimezone, periodDays = 30) {
-  const rows = await prisma.orderProductDay.findMany({
-    where: {
-      shopDomain,
-      productId,
-      cancelled: false,
-      day: windowDayFilter(ianaTimezone, periodDays),
-    },
-    select: { netUnits: true },
-  });
+export async function getUnitsSoldInTrailingWindow(
+  shopDomain,
+  productId,
+  ianaTimezone,
+  periodDays = 30
+) {
+  const [rows, setting] = await Promise.all([
+    prisma.orderProductDay.findMany({
+      where: {
+        shopDomain,
+        productId,
+        cancelled: false,
+        day: windowDayFilter(ianaTimezone, periodDays),
+      },
+      select: {
+        netUnits: true,
+      },
+    }),
 
-  return { unitsSold: Math.max(0, sumNetUnits(rows)), periodDays };
+    prisma.productDisplaySetting.findFirst({
+      where: {
+        shopDomain,
+        productId,
+      },
+      select: {
+        previewUnits: true,
+      },
+    }),
+  ]);
+
+  return {
+    unitsSold: Math.max(0, sumNetUnits(rows)),
+    previewUnits: setting?.previewUnits ?? null,
+    periodDays,
+  };
 }
 
 /** Same metric as getUnitsSoldInTrailingWindow, for every product of the shop at once (admin table). */

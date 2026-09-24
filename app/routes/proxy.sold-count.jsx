@@ -2,7 +2,7 @@ import { json } from "@remix-run/node";
 import prisma from "../db.server";
 import { formatSoldMessage, formatSoldMessageParts, resolveLocale } from "../i18n/messages";
 import { authenticate } from "../shopify.server";
-import { resolveProductDisplay } from "../services/productDisplay";
+import { isProductHidden } from "../services/productDisplay";
 import { normalizeProductId } from "../services/productId";
 import { getUnitsSoldInTrailingWindow } from "../services/salesQuery.server";
 
@@ -42,29 +42,28 @@ export const loader = async ({ request }) => {
   const setting = await prisma.productDisplaySetting.findUnique({
     where: { shopDomain_productId: { shopDomain: session.shop, productId } },
   });
-  const display = resolveProductDisplay(setting, url.searchParams, shop);
 
   // Products the merchant unticked never show the counter, whatever the
   // block's "show zero" setting — so there's no need to compute the number.
-  if (display.hidden) {
+  if (isProductHidden(setting)) {
     return json({ productId: rawProductId, hidden: true });
   }
 
-  // A test figure only comes back where no real shopper can see it (theme
-  // editor, unpublished themes, development stores — see productDisplay.js).
-  const preview = display.previewUnits !== null;
-  const { unitsSold, periodDays } = preview
-    ? { unitsSold: display.previewUnits, periodDays: shop.windowDays }
-    : await getUnitsSoldInTrailingWindow(session.shop, productId, shop.ianaTimezone, shop.windowDays);
+  const {unitsSold, previewUnits, periodDays} = await getUnitsSoldInTrailingWindow(
+    session.shop,
+    productId,
+    shop.ianaTimezone,
+    shop.windowDays,
+  );
 
   return json({
     productId: rawProductId,
     unitsSold,
+    previewUnits,
     periodDays,
-    preview,
     locale,
     hideWhenZero: shop.hideWhenZero,
-    message: formatSoldMessage(unitsSold, periodDays, locale),
-    messageParts: formatSoldMessageParts(unitsSold, periodDays, locale),
+    message: formatSoldMessage(unitsSold, periodDays, locale, previewUnits),
+    messageParts: formatSoldMessageParts(unitsSold, periodDays, locale, previewUnits),
   });
 };

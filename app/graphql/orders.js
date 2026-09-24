@@ -83,9 +83,6 @@ export const SHOP_QUERY = /* GraphQL */ `
     shop {
       myshopifyDomain
       ianaTimezone
-      plan {
-        partnerDevelopment
-      }
     }
   }
 `;

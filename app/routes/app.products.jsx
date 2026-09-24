@@ -17,7 +17,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import prisma from "../db.server";
 import { PRODUCTS_PAGE_QUERY } from "../graphql/products";
-import { MAX_PREVIEW_UNITS, isDefaultSetting, parsePreviewUnits } from "../services/productDisplay";
+import { MAX_PREVIEW_UNITS, parsePreviewUnits } from "../services/productDisplay";
 import { normalizeProductId } from "../services/productId";
 import { getUnitsSoldByProduct } from "../services/salesQuery.server";
 import { authenticate } from "../shopify.server";
@@ -86,23 +86,15 @@ export const action = async ({ request }) => {
     return json({ error: "invalid productId" }, { status: 400 });
   }
 
-  const key = { shopDomain_productId: { shopDomain: session.shop, productId } };
-  const current = await prisma.productDisplaySetting.findUnique({ where: key });
-  const next = {
-    hidden: current?.hidden ?? false,
-    previewUnits: current?.previewUnits ?? null,
-  };
-  if (intent === "set-visible") next.hidden = formData.get("visible") !== "true";
-  if (intent === "set-preview-units") next.previewUnits = parsePreviewUnits(formData.get("previewUnits"));
+  const data = {};
+  if (intent === "set-visible") data.hidden = formData.get("visible") !== "true";
+  if (intent === "set-preview-units") data.previewUnits = parsePreviewUnits(formData.get("previewUnits"));
 
-  // Rows only exist for products that differ from the defaults.
-  if (isDefaultSetting(next)) {
-    await prisma.productDisplaySetting.deleteMany({ where: { shopDomain: session.shop, productId } });
-  } else {
+  if (Object.keys(data).length > 0) {
     await prisma.productDisplaySetting.upsert({
-      where: key,
-      create: { shopDomain: session.shop, productId, ...next },
-      update: next,
+      where: { shopDomain_productId: { shopDomain: session.shop, productId } },
+      create: { shopDomain: session.shop, productId, ...data },
+      update: data,
     });
   }
   return json({ ok: true });
@@ -125,21 +117,17 @@ function ProductRow({ row, index }) {
   const [previewInput, setPreviewInput] = useState(row.previewUnits?.toString() ?? "");
   useEffect(() => setPreviewInput(row.previewUnits?.toString() ?? ""), [row.previewUnits]);
 
-  // Optimistic: reflect the checkbox immediately while the save is in flight.
-  const visible =
-    fetcher.formData?.get("intent") === "set-visible" ? fetcher.formData.get("visible") === "true" : row.visible;
-
-  const savePreviewUnits = () => {
-    const normalized = parsePreviewUnits(previewInput);
-    if (normalized === row.previewUnits) {
+  const savePreviewUnits = (value) => {
+    if (parsePreviewUnits(value) === row.previewUnits) {
       setPreviewInput(row.previewUnits?.toString() ?? "");
       return;
     }
-    fetcher.submit(
-      { intent: "set-preview-units", productId: row.id, previewUnits: previewInput },
-      { method: "post" },
-    );
+    fetcher.submit({ intent: "set-preview-units", productId: row.id, previewUnits: value }, { method: "post" });
   };
+
+  // Optimistic: reflect the checkbox immediately while the save is in flight.
+  const visible =
+    fetcher.formData?.get("intent") === "set-visible" ? fetcher.formData.get("visible") === "true" : row.visible;
 
   const statusBadge = STATUS_BADGES[row.status];
 
@@ -190,17 +178,13 @@ function ProductRow({ row, index }) {
             max={MAX_PREVIEW_UNITS}
             autoComplete="off"
             placeholder="—"
-            disabled={!visible}
             value={previewInput}
             onChange={setPreviewInput}
-            onBlur={savePreviewUnits}
+            onBlur={() => savePreviewUnits(previewInput)}
             clearButton
             onClearButtonClick={() => {
               setPreviewInput("");
-              fetcher.submit(
-                { intent: "set-preview-units", productId: row.id, previewUnits: "" },
-                { method: "post" },
-              );
+              savePreviewUnits("");
             }}
           />
         </Box>
@@ -232,13 +216,6 @@ export default function Products() {
               <Text as="p">
                 Ventas de los últimos <strong>{shop.windowDays} días</strong> (se cambia en la página de inicio).
                 Marca en qué productos se muestra el contador: {visibleCount} de {rows.length} lo muestran.
-              </Text>
-              <Text as="p" tone="subdued">
-                <strong>Unidades de prueba:</strong>{" "}
-                {shop.isDevelopmentStore
-                  ? "esta es una tienda de desarrollo, así que sustituyen a las ventas reales en todos sus temas."
-                  : "sustituyen a las ventas reales solo en el editor de temas y en los temas no publicados (vista previa). En el tema publicado los compradores siempre ven las ventas reales."}{" "}
-                Déjalo vacío para usar las ventas reales.
               </Text>
               <Checkbox
                 label="Ocultar el contador en los productos con 0 unidades vendidas"

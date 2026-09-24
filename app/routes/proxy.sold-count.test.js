@@ -73,7 +73,7 @@ describe("proxy.sold-count loader", () => {
   it("hides a product the merchant unticked, without computing its sales", async () => {
     appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
     shopFindUniqueMock.mockResolvedValue({ shopDomain: "shop.myshopify.com", ianaTimezone: "UTC", hideWhenZero: false });
-    settingFindUniqueMock.mockResolvedValue({ hidden: true, previewUnits: null });
+    settingFindUniqueMock.mockResolvedValue({ hidden: true });
 
     const response = await loader({ request: makeRequest("product_id=123"), params: {}, context: {} });
     const body = await response.json();
@@ -83,33 +83,6 @@ describe("proxy.sold-count loader", () => {
     });
     expect(body).toEqual({ productId: "123", hidden: true });
     expect(getUnitsSoldMock).not.toHaveBeenCalled();
-  });
-
-  it("uses the product's test figure only for theme-editor (preview=1) requests", async () => {
-    appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
-    shopFindUniqueMock.mockResolvedValue({
-      shopDomain: "shop.myshopify.com",
-      ianaTimezone: "UTC",
-      hideWhenZero: true,
-      windowDays: 30,
-    });
-    settingFindUniqueMock.mockResolvedValue({ hidden: false, previewUnits: 1250 });
-    getUnitsSoldMock.mockResolvedValue({ unitsSold: 3, periodDays: 30 });
-
-    const editor = await loader({
-      request: makeRequest("product_id=123&locale=es&preview=1"),
-      params: {},
-      context: {},
-    });
-    const editorBody = await editor.json();
-    expect(editorBody.unitsSold).toBe(1250);
-    expect(editorBody.preview).toBe(true);
-    expect(getUnitsSoldMock).not.toHaveBeenCalled();
-
-    const live = await loader({ request: makeRequest("product_id=123&locale=es"), params: {}, context: {} });
-    const liveBody = await live.json();
-    expect(liveBody.unitsSold).toBe(3);
-    expect(liveBody.preview).toBe(false);
   });
 
   it("returns the localized message scoped to the authenticated shop only", async () => {

@@ -4,12 +4,6 @@
   passes the current product + locale to the app via a data attribute and
   lets product-sales-counter.js ask the app's App Proxy endpoint for the
   text to display.
-
-  data-test-context is true only where no real shopper can see the page:
-  the theme editor, or a theme that isn't the published one. There the
-  admin's "test units" replace the real count. The role check is an
-  explicit allowlist, so if Shopify ever stops filling theme.role (the
-  object is deprecated) this fails safe to "false" on the live theme.
 {% endcomment %}
 <div
   class="product-sales-counter"
@@ -17,7 +11,6 @@
   data-product-id="{{ product.id }}"
   data-locale="{{ request.locale.iso_code }}"
   data-show-zero="{{ block.settings.show_zero }}"
-  data-test-context="{% if request.design_mode or theme.role == 'unpublished' or theme.role == 'development' or theme.role == 'demo' %}true{% else %}false{% endif %}"
   aria-live="polite"
   {{ block.shopify_attributes }}
 ></div>
