@@ -1,0 +1,14 @@
+/* Lets a Card's content fill the card's full height (Card has no prop for it),
+   so a card stretched by its grid row can push its action to the bottom edge. */
+*:has(> .card-fill) {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-fill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--p-space-400);
+}

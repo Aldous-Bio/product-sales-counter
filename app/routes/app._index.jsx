@@ -1,16 +1,32 @@
 import { json } from "@remix-run/node";
 import { Form, useLoaderData, useNavigation, useSubmit } from "@remix-run/react";
-import { BlockStack, Box, Button, Card, InlineStack, Layout, Page, Select, Text } from "@shopify/polaris";
+import {
+  BlockStack,
+  Box,
+  Button,
+  Card,
+  InlineGrid,
+  InlineStack,
+  Layout,
+  Page,
+  Select,
+  Text,
+} from "@shopify/polaris";
 import prisma from "../db.server";
 import { runReconciliation } from "../services/backfill.server";
 import { authenticate } from "../shopify.server";
+import dashboardStyles from "../styles/dashboard.css?url";
+
+export const links = () => [{ rel: "stylesheet", href: dashboardStyles }];
 
 // Each option has a natural-language phrase in app/i18n/messages.js (PERIOD_KEYS).
 const WINDOW_DAYS_OPTIONS = [7, 14, 30, 60, 90];
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
-  const shop = await prisma.shop.findUniqueOrThrow({ where: { shopDomain: session.shop } });
+  const shop = await prisma.shop.findUniqueOrThrow({
+    where: { shopDomain: session.shop },
+  });
   return json({ shop });
 };
 
@@ -20,7 +36,9 @@ export const action = async ({ request }) => {
   const intent = formData.get("intent");
 
   if (intent === "reconcile") {
-    const shop = await prisma.shop.findUniqueOrThrow({ where: { shopDomain: session.shop } });
+    const shop = await prisma.shop.findUniqueOrThrow({
+      where: { shopDomain: session.shop },
+    });
     try {
       await runReconciliation(
         session.shop,
@@ -36,10 +54,15 @@ export const action = async ({ request }) => {
     const windowDays = WINDOW_DAYS_OPTIONS.includes(Number(formData.get("windowDays")))
       ? Number(formData.get("windowDays"))
       : 30;
-    await prisma.shop.update({ where: { shopDomain: session.shop }, data: { windowDays } });
+    await prisma.shop.update({
+      where: { shopDomain: session.shop },
+      data: { windowDays },
+    });
   }
 
-  const shop = await prisma.shop.findUniqueOrThrow({ where: { shopDomain: session.shop } });
+  const shop = await prisma.shop.findUniqueOrThrow({
+    where: { shopDomain: session.shop },
+  });
   return json({ shop });
 };
 
@@ -49,12 +72,13 @@ export default function Dashboard() {
   const submit = useSubmit();
   const busy = navigation.state !== "idle";
 
-  const backfillStatusEs = {
-    pending: "pendiente",
-    running: "en curso",
-    completed: "completado",
-    failed: "fallido",
-  }[shop.backfillStatus] ?? shop.backfillStatus;
+  const backfillStatusEs =
+    {
+      pending: "pendiente",
+      running: "en curso",
+      completed: "completado",
+      failed: "fallido",
+    }[shop.backfillStatus] ?? shop.backfillStatus;
 
   return (
     <Page title="Contador de ventas por producto">
@@ -93,51 +117,56 @@ export default function Dashboard() {
         </Layout.Section>
 
         <Layout.Section>
-          <Card>
-            <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">
-                Sincronización manual
-              </Text>
-              <Text as="p">
-                Vuelve a sincronizar los últimos {shop.windowDays} días de pedidos de esta tienda,
-                corrigiendo cualquier desajuste por webhooks perdidos o retrasados.
-              </Text>
-              <InlineStack>
-                <Form method="post">
-                  <input type="hidden" name="intent" value="reconcile" />
-                  <Button submit loading={busy} variant="primary">
-                    Sincronizar ahora
-                  </Button>
-                </Form>
-              </InlineStack>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+          <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+            <Card>
+              <BlockStack gap="300">
+                <Text as="h2" variant="headingMd">
+                  Periodo de cálculo
+                </Text>
+                <Text as="p">
+                  Número de días hacia atrás que se tienen en cuenta para contar las ventas. Se aplica tanto a
+                  la sincronización manual y automática como al número que se muestra en la tienda.
+                </Text>
+                <Select
+                  label="Días a considerar"
+                  labelHidden
+                  options={WINDOW_DAYS_OPTIONS.map((days) => ({
+                    label: `${days} días`,
+                    value: String(days),
+                  }))}
+                  value={String(shop.windowDays)}
+                  onChange={(value) => {
+                    const formData = new FormData();
+                    formData.set("intent", "set-window-days");
+                    formData.set("windowDays", value);
+                    submit(formData, { method: "post" });
+                  }}
+                />
+              </BlockStack>
+            </Card>
 
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">
-                Periodo de cálculo
-              </Text>
-              <Text as="p">
-                Número de días hacia atrás que se tienen en cuenta para contar las ventas. Se aplica tanto
-                a la sincronización manual y automática como al número que se muestra en la tienda.
-              </Text>
-              <Select
-                label="Días a considerar"
-                labelHidden
-                options={WINDOW_DAYS_OPTIONS.map((days) => ({ label: `${days} días`, value: String(days) }))}
-                value={String(shop.windowDays)}
-                onChange={(value) => {
-                  const formData = new FormData();
-                  formData.set("intent", "set-window-days");
-                  formData.set("windowDays", value);
-                  submit(formData, { method: "post" });
-                }}
-              />
-            </BlockStack>
-          </Card>
+            <Card>
+              <div className="card-fill">
+                <BlockStack gap="300">
+                  <Text as="h2" variant="headingMd">
+                    Sincronización manual
+                  </Text>
+                  <Text as="p">
+                    Vuelve a sincronizar los últimos {shop.windowDays} días de pedidos de esta tienda,
+                    corrigiendo cualquier desajuste por webhooks perdidos o retrasados.
+                  </Text>
+                </BlockStack>
+                <InlineStack>
+                  <Form method="post">
+                    <input type="hidden" name="intent" value="reconcile" />
+                    <Button submit loading={busy} variant="primary">
+                      Sincronizar ahora
+                    </Button>
+                  </Form>
+                </InlineStack>
+              </div>
+            </Card>
+          </InlineGrid>
         </Layout.Section>
       </Layout>
       <Box paddingBlockEnd="800" />
