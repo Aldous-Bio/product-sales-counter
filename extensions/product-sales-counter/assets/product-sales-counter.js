@@ -36,11 +36,13 @@
 
         var text = document.createElement("p");
         text.className =
-          "product-sales-counter__text m-0 text-xs text-right text-lg-left text-secondary-grey-darkest font-light";
+          "product-sales-counter__text m-0 text-xxs text-lg-xs text-right text-lg-left text-secondary-grey-darkest font-light";
         // messageParts lets the backend bold the count without sending
         // HTML; fall back to the plain message if it's missing.
-        var parts = data.messageParts || [{ text: data.message, strong: false }];
-        console.log("datos partes", parts)
+        var parts = data.messageParts || [
+          { text: data.message, strong: false },
+        ];
+        console.log("datos partes", parts);
         parts.forEach(function (part) {
           if (part.strong) {
             var strong = document.createElement("strong");
