@@ -36,7 +36,7 @@
 
         var text = document.createElement("p");
         text.className =
-          "product-sales-counter__text m-0 text-xxs text-lg-xs text-right text-lg-left text-secondary-grey-darkest font-light";
+          "product-sales-counter__text m-0 text-right text-lg-left text-secondary-grey-darkest font-light text-xxs text-lg-xs";
         // messageParts lets the backend bold the count without sending
         // HTML; fall back to the plain message if it's missing.
         var parts = data.messageParts || [
