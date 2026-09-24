@@ -139,28 +139,6 @@ export default function Dashboard() {
             </BlockStack>
           </Card>
         </Layout.Section>
-
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">
-                Productos
-              </Text>
-              <Text as="p">
-                Elige en qué productos se muestra el contador, consulta sus ventas y prueba cifras en el editor
-                de temas.
-              </Text>
-              <InlineStack>
-                <Button url="/app/products">Gestionar productos</Button>
-              </InlineStack>
-              <Text as="p" tone="subdued">
-                Añade el bloque "Unidades vendidas" a tu ficha de producto desde el editor de temas: Tienda
-                online → Temas → Personalizar → abre una página de producto → Añadir bloque → Apps → Product
-                sales counter.
-              </Text>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
       </Layout>
       <Box paddingBlockEnd="800" />
     </Page>
