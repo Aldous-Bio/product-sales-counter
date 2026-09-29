@@ -34,4 +34,4 @@ prisma/dev.sqlite*
 *.sqlite
 *.sqlite-journal
 
-.vscode
+.vscode/*
