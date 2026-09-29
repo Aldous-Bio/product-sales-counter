@@ -8,6 +8,16 @@
 
   function mount(container) {
     var productId = container.getAttribute("data-product-id");
+    // Outside a product template (e.g. a regular page replicating a product
+    // page) Liquid's `product` is nil and the attribute is empty, so fall
+    // back to the nearest ancestor the theme tagged with the product ID.
+    // Start from parentElement so `closest` doesn't match the block itself.
+    if (!productId) {
+      var host =
+        container.parentElement &&
+        container.parentElement.closest("[data-product-id]");
+      productId = host && host.getAttribute("data-product-id");
+    }
     var locale = container.getAttribute("data-locale") || "en";
     var forceShowZero = container.getAttribute("data-show-zero") === "true";
 
