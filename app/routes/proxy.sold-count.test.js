@@ -36,16 +36,26 @@ describe("proxy.sold-count loader", () => {
   it("rejects a request App Proxy could not authenticate (bad/missing HMAC signature)", async () => {
     appProxyMock.mockResolvedValue({ session: null });
 
-    const response = await loader({ request: makeRequest("product_id=123"), params: {}, context: {} });
+    const response = await loader({
+      request: makeRequest("product_id=123"),
+      params: {},
+      context: {},
+    });
 
     expect(response.status).toBe(401);
   });
 
   it("returns 404 for a shop that authenticated but was never installed/onboarded in our DB", async () => {
-    appProxyMock.mockResolvedValue({ session: { shop: "some-other-shop.myshopify.com" } });
+    appProxyMock.mockResolvedValue({
+      session: { shop: "some-other-shop.myshopify.com" },
+    });
     shopFindUniqueMock.mockResolvedValue(null);
 
-    const response = await loader({ request: makeRequest("product_id=123"), params: {}, context: {} });
+    const response = await loader({
+      request: makeRequest("product_id=123"),
+      params: {},
+      context: {},
+    });
 
     expect(response.status).toBe(404);
   });
@@ -53,7 +63,11 @@ describe("proxy.sold-count loader", () => {
   it("rejects a request missing product_id", async () => {
     appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
 
-    const response = await loader({ request: makeRequest(""), params: {}, context: {} });
+    const response = await loader({
+      request: makeRequest(""),
+      params: {},
+      context: {},
+    });
 
     expect(response.status).toBe(400);
   });
@@ -72,14 +86,27 @@ describe("proxy.sold-count loader", () => {
 
   it("hides a product the merchant unticked, without computing its sales", async () => {
     appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
-    shopFindUniqueMock.mockResolvedValue({ shopDomain: "shop.myshopify.com", ianaTimezone: "UTC", hideWhenZero: false });
+    shopFindUniqueMock.mockResolvedValue({
+      shopDomain: "shop.myshopify.com",
+      ianaTimezone: "UTC",
+      hideWhenZero: false,
+    });
     settingFindUniqueMock.mockResolvedValue({ hidden: true });
 
-    const response = await loader({ request: makeRequest("product_id=123"), params: {}, context: {} });
+    const response = await loader({
+      request: makeRequest("product_id=123"),
+      params: {},
+      context: {},
+    });
     const body = await response.json();
 
     expect(settingFindUniqueMock).toHaveBeenCalledWith({
-      where: { shopDomain_productId: { shopDomain: "shop.myshopify.com", productId: "gid://shopify/Product/123" } },
+      where: {
+        shopDomain_productId: {
+          shopDomain: "shop.myshopify.com",
+          productId: "gid://shopify/Product/123",
+        },
+      },
     });
     expect(body).toEqual({ productId: "123", hidden: true });
     expect(getUnitsSoldMock).not.toHaveBeenCalled();
@@ -87,7 +114,11 @@ describe("proxy.sold-count loader", () => {
 
   it("returns the localized message scoped to the authenticated shop only", async () => {
     appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
-    shopFindUniqueMock.mockResolvedValue({ shopDomain: "shop.myshopify.com", ianaTimezone: "UTC", hideWhenZero: true });
+    shopFindUniqueMock.mockResolvedValue({
+      shopDomain: "shop.myshopify.com",
+      ianaTimezone: "UTC",
+      hideWhenZero: true,
+    });
     getUnitsSoldMock.mockResolvedValue({ unitsSold: 4964, periodDays: 30 });
 
     const response = await loader({
@@ -97,10 +128,12 @@ describe("proxy.sold-count loader", () => {
     });
     const body = await response.json();
 
-    expect(shopFindUniqueMock).toHaveBeenCalledWith({ where: { shopDomain: "shop.myshopify.com" } });
-    expect(body.message).toBe("4964 vendidas en el último mes");
+    expect(shopFindUniqueMock).toHaveBeenCalledWith({
+      where: { shopDomain: "shop.myshopify.com" },
+    });
+    expect(body.message).toBe("+4900 vendidas en el último mes");
     expect(body.messageParts).toEqual([
-      { text: "4964 vendidas", strong: true },
+      { text: "+4900 vendidas", strong: true },
       { text: " en el último mes", strong: false },
     ]);
     expect(body.unitsSold).toBe(4964);

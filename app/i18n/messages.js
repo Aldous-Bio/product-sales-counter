@@ -105,18 +105,26 @@ export function resolveLocale(requested) {
  * Uses previewUnits when provided; otherwise falls back to unitsSold.
  * The displayed count is also used for pluralization and number formatting.
  */
-export function formatSoldMessageParts(unitsSold, periodDays, locale, previewUnits) {
+export function formatSoldMessageParts(
+  unitsSold,
+  periodDays,
+  locale,
+  previewUnits,
+) {
   const resolved = resolveLocale(locale);
   const entry = CATALOG[resolved] ?? CATALOG[DEFAULT_LOCALE];
 
   const displayUnits = previewUnits ?? unitsSold;
+  const visibleUnits =
+    displayUnits >= 100 ? Math.floor(displayUnits / 100) * 100 : displayUnits;
 
   const category = new Intl.PluralRules(resolved).select(displayUnits);
-  const formattedCount = new Intl.NumberFormat(resolved).format(displayUnits);
+  const formattedCount = new Intl.NumberFormat(resolved).format(visibleUnits);
+  const countPrefix = displayUnits >= 100 ? "+" : "";
 
   const sold = (category === "one" ? entry.sold.one : entry.sold.other).replace(
     "{count}",
-    formattedCount,
+    `${countPrefix}${formattedCount}`,
   );
 
   const period = entry.periods[PERIOD_KEYS[periodDays] ?? "days"].replace(
