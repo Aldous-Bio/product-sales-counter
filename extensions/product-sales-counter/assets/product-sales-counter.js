@@ -47,7 +47,7 @@
         var text = document.createElement("p");
         text.className =
           "product-sales-counter__text m-0 text-right text-lg-left text-secondary-grey-darkest font-light text-xxs text-lg-xs";
-        // messageParts lets the backend bold the count without sending
+        // messageParts lets the backend emphasize the count without sending
         // HTML; fall back to the plain message if it's missing.
         var parts = data.messageParts || [
           { text: data.message, strong: false },
@@ -55,9 +55,10 @@
         console.log("datos partes", parts);
         parts.forEach(function (part) {
           if (part.strong) {
-            var strong = document.createElement("strong");
-            strong.textContent = part.text;
-            text.appendChild(strong);
+            var emphasized = document.createElement("span");
+            emphasized.className = "font-medium m-0 inline";
+            emphasized.textContent = part.text;
+            text.appendChild(emphasized);
           } else {
             text.appendChild(document.createTextNode(part.text));
           }
