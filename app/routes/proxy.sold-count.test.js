@@ -138,4 +138,65 @@ describe("proxy.sold-count loader", () => {
     ]);
     expect(body.unitsSold).toBe(4964);
   });
+
+  it("hides the counter below the shop's minimum, without sending the figure", async () => {
+    appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
+    shopFindUniqueMock.mockResolvedValue({
+      shopDomain: "shop.myshopify.com",
+      ianaTimezone: "UTC",
+      hideWhenZero: false,
+      minUnitsToShow: 10,
+    });
+    getUnitsSoldMock.mockResolvedValue({ unitsSold: 9, previewUnits: null, periodDays: 30 });
+
+    const response = await loader({
+      request: makeRequest("product_id=123"),
+      params: {},
+      context: {},
+    });
+    const body = await response.json();
+
+    expect(body).toEqual({ productId: "123", hidden: true });
+  });
+
+  it("shows the counter once sales reach the minimum", async () => {
+    appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
+    shopFindUniqueMock.mockResolvedValue({
+      shopDomain: "shop.myshopify.com",
+      ianaTimezone: "UTC",
+      hideWhenZero: true,
+      minUnitsToShow: 10,
+    });
+    getUnitsSoldMock.mockResolvedValue({ unitsSold: 10, previewUnits: null, periodDays: 30 });
+
+    const response = await loader({
+      request: makeRequest("product_id=123"),
+      params: {},
+      context: {},
+    });
+    const body = await response.json();
+
+    expect(body.hidden).toBeUndefined();
+    expect(body.unitsSold).toBe(10);
+  });
+
+  it("applies the minimum to the test figure when one is set", async () => {
+    appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
+    shopFindUniqueMock.mockResolvedValue({
+      shopDomain: "shop.myshopify.com",
+      ianaTimezone: "UTC",
+      hideWhenZero: true,
+      minUnitsToShow: 10,
+    });
+    getUnitsSoldMock.mockResolvedValue({ unitsSold: 50, previewUnits: 5, periodDays: 30 });
+
+    const response = await loader({
+      request: makeRequest("product_id=123"),
+      params: {},
+      context: {},
+    });
+    const body = await response.json();
+
+    expect(body).toEqual({ productId: "123", hidden: true });
+  });
 });

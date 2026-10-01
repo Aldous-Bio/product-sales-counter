@@ -11,9 +11,12 @@ import {
   Page,
   Select,
   Text,
+  TextField,
 } from "@shopify/polaris";
+import { useEffect, useState } from "react";
 import prisma from "../db.server";
 import { runReconciliation } from "../services/backfill.server";
+import { MAX_PREVIEW_UNITS, parseMinUnitsToShow } from "../services/productDisplay";
 import { authenticate } from "../shopify.server";
 import dashboardStyles from "../styles/dashboard.css?url";
 
@@ -50,6 +53,13 @@ export const action = async ({ request }) => {
     }
   }
 
+  if (intent === "set-min-units") {
+    await prisma.shop.update({
+      where: { shopDomain: session.shop },
+      data: { minUnitsToShow: parseMinUnitsToShow(formData.get("minUnitsToShow")) },
+    });
+  }
+
   if (intent === "set-window-days") {
     const windowDays = WINDOW_DAYS_OPTIONS.includes(Number(formData.get("windowDays")))
       ? Number(formData.get("windowDays"))
@@ -71,6 +81,10 @@ export default function Dashboard() {
   const navigation = useNavigation();
   const submit = useSubmit();
   const busy = navigation.state !== "idle";
+  const savingMinUnits = busy && navigation.formData?.get("intent") === "set-min-units";
+  const reconciling = busy && navigation.formData?.get("intent") === "reconcile";
+  const [minUnitsInput, setMinUnitsInput] = useState(String(shop.minUnitsToShow));
+  useEffect(() => setMinUnitsInput(String(shop.minUnitsToShow)), [shop.minUnitsToShow]);
 
   const backfillStatusEs =
     {
@@ -146,6 +160,41 @@ export default function Dashboard() {
             </Card>
 
             <Card>
+              <Form method="post" className="card-fill">
+                <BlockStack gap="300">
+                  <Text as="h2" variant="headingMd">
+                    Mínimo de unidades vendidas
+                  </Text>
+                  <Text as="p">
+                    El contador solo se muestra en la tienda en los productos que hayan vendido al menos este
+                    número de unidades en los últimos {shop.windowDays} días. Con 0 no hay mínimo.
+                  </Text>
+                  <input type="hidden" name="intent" value="set-min-units" />
+                  <TextField
+                    label="Unidades mínimas"
+                    labelHidden
+                    name="minUnitsToShow"
+                    type="number"
+                    min={0}
+                    max={MAX_PREVIEW_UNITS}
+                    autoComplete="off"
+                    value={minUnitsInput}
+                    onChange={setMinUnitsInput}
+                  />
+                </BlockStack>
+                <InlineStack>
+                  <Button
+                    submit
+                    loading={savingMinUnits}
+                    disabled={parseMinUnitsToShow(minUnitsInput) === shop.minUnitsToShow}
+                  >
+                    Guardar
+                  </Button>
+                </InlineStack>
+              </Form>
+            </Card>
+
+            <Card>
               <div className="card-fill">
                 <BlockStack gap="300">
                   <Text as="h2" variant="headingMd">
@@ -159,7 +208,7 @@ export default function Dashboard() {
                 <InlineStack>
                   <Form method="post">
                     <input type="hidden" name="intent" value="reconcile" />
-                    <Button submit loading={busy} variant="primary">
+                    <Button submit loading={reconciling} variant="primary">
                       Sincronizar ahora
                     </Button>
                   </Form>

@@ -2,7 +2,7 @@ import { json } from "@remix-run/node";
 import prisma from "../db.server";
 import { formatSoldMessage, formatSoldMessageParts, resolveLocale } from "../i18n/messages";
 import { authenticate } from "../shopify.server";
-import { isProductHidden } from "../services/productDisplay";
+import { isBelowMinimum, isProductHidden } from "../services/productDisplay";
 import { normalizeProductId } from "../services/productId";
 import { getUnitsSoldInTrailingWindow } from "../services/salesQuery.server";
 
@@ -55,6 +55,13 @@ export const loader = async ({ request }) => {
     shop.ianaTimezone,
     shop.windowDays,
   );
+
+  // Below the shop's minimum the counter is hidden like an unticked product,
+  // so the figure never reaches the browser. Compared against what would be
+  // displayed, so a test figure (previewUnits) exercises the minimum too.
+  if (isBelowMinimum(previewUnits ?? unitsSold, shop.minUnitsToShow)) {
+    return json({ productId: rawProductId, hidden: true });
+  }
 
   return json({
     productId: rawProductId,

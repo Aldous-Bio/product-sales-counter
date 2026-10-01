@@ -17,6 +17,26 @@ export function parsePreviewUnits(raw) {
   return Math.min(Number(trimmed), MAX_PREVIEW_UNITS);
 }
 
+/**
+ * "Mínimo de unidades" field of the admin dashboard: form value ->
+ * non-negative integer. Empty or invalid input means no minimum (0).
+ * Stored in Shop.minUnitsToShow.
+ */
+export function parseMinUnitsToShow(raw) {
+  const trimmed = String(raw ?? "").trim();
+  if (!/^\d+$/.test(trimmed)) return 0;
+  return Math.min(Number(trimmed), MAX_PREVIEW_UNITS);
+}
+
+/**
+ * Whether the figure the storefront would show (`units`) falls short of the
+ * shop's minimum. Applies on top of hideWhenZero and the block's "show zero"
+ * setting, which can't override it.
+ */
+export function isBelowMinimum(units, minUnitsToShow) {
+  return units < (minUnitsToShow ?? 0);
+}
+
 /** Whether the merchant unticked this product in the admin table. */
 export function isProductHidden(setting) {
   return Boolean(setting?.hidden);

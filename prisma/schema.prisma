@@ -40,6 +40,7 @@ model Shop {
   ianaTimezone         String    @default("UTC")
   hideWhenZero         Boolean   @default(true)
   windowDays           Int       @default(30) // trailing-window length used by sync + storefront display
+  minUnitsToShow       Int       @default(0) // storefront counter hidden below this many units; 0 = no minimum
   // Shopify partner development store (shop.plan.partnerDevelopment): it
   // can't take real orders from real customers, so test units may show on
   // its storefront. Refreshed on every auth.
