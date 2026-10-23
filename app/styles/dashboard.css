@@ -1,14 +1,21 @@
-/* Lets a Card's content fill the card's full height (Card has no prop for it),
-   so a card stretched by its grid row can push its action to the bottom edge. */
-*:has(> .card-fill) {
-  display: flex;
-  flex-direction: column;
+/* Status card: three columns split by vertical dividers, stacked with
+   horizontal dividers on narrow screens (Polaris Divider is horizontal only). */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
 }
 
-.card-fill {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: var(--p-space-400);
+.metrics > * + * {
+  border-inline-start: var(--p-border-width-025) solid var(--p-color-border-secondary);
+}
+
+@media (max-width: 47.9975em) {
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics > * + * {
+    border-inline-start: none;
+    border-block-start: var(--p-border-width-025) solid var(--p-color-border-secondary);
+  }
 }

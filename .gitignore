@@ -16,6 +16,10 @@ coverage
 logs
 *.log
 
+# Remix build output
+/build
+/.cache
+
 # extensions build output
 extensions/*/build
 extensions/*/dist
