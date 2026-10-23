@@ -38,9 +38,9 @@ model Session {
 model Shop {
   shopDomain           String    @id
   ianaTimezone         String    @default("UTC")
-  hideWhenZero         Boolean   @default(true)
+  hideWhenZero         Boolean   @default(true) // unused, replaced by minUnitsToShow; kept until existing shops are migrated
   windowDays           Int       @default(30) // trailing-window length used by sync + storefront display
-  minUnitsToShow       Int       @default(0) // storefront counter hidden below this many units; 0 = no minimum
+  minUnitsToShow       Int       @default(1) // storefront counter hidden below this many units; 0 = no minimum
   // Shopify partner development store (shop.plan.partnerDevelopment): it
   // can't take real orders from real customers, so test units may show on
   // its storefront. Refreshed on every auth.

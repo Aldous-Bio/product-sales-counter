@@ -10,7 +10,6 @@
   data-product-sales-counter
   data-product-id="{{ product.id }}"
   data-locale="{{ request.locale.iso_code }}"
-  data-show-zero="{{ block.settings.show_zero }}"
   aria-live="polite"
   {{ block.shopify_attributes }}
 ></div>
@@ -21,13 +20,6 @@
 {
   "name": "t:name",
   "target": "section",
-  "settings": [
-    {
-      "type": "checkbox",
-      "id": "show_zero",
-      "label": "t:settings.show_zero.label",
-      "default": false
-    }
-  ]
+  "settings": []
 }
 {% endschema %}

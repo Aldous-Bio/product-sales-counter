@@ -43,8 +43,8 @@ export const loader = async ({ request }) => {
     where: { shopDomain_productId: { shopDomain: session.shop, productId } },
   });
 
-  // Products the merchant unticked never show the counter, whatever the
-  // block's "show zero" setting — so there's no need to compute the number.
+  // Products the merchant unticked never show the counter, so there's no
+  // need to compute the number.
   if (isProductHidden(setting)) {
     return json({ productId: rawProductId, hidden: true });
   }
@@ -69,7 +69,6 @@ export const loader = async ({ request }) => {
     previewUnits,
     periodDays,
     locale,
-    hideWhenZero: shop.hideWhenZero,
     message: formatSoldMessage(unitsSold, periodDays, locale, previewUnits),
     messageParts: formatSoldMessageParts(unitsSold, periodDays, locale, previewUnits),
   });

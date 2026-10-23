@@ -49,7 +49,8 @@ Key files:
 ## Data model (`prisma/schema.prisma`)
 
 - `Shop` — one row per installed shop: timezone, backfill/reconciliation
-  status, the "hide when zero" default and the trailing window length.
+  status, the minimum units sold to show the counter (`minUnitsToShow`,
+  default 1 so products with no sales hide it) and the trailing window length.
 - `ProductDisplaySetting` — per-product overrides from the admin
   "Productos" page (`app/routes/app.products.jsx`): `hidden` (never show the
   counter; sales are still synced, the proxy answers `{ hidden: true }`).

@@ -30,8 +30,7 @@ export function parseMinUnitsToShow(raw) {
 
 /**
  * Whether the figure the storefront would show (`units`) falls short of the
- * shop's minimum. Applies on top of hideWhenZero and the block's "show zero"
- * setting, which can't override it.
+ * shop's minimum.
  */
 export function isBelowMinimum(units, minUnitsToShow) {
   return units < (minUnitsToShow ?? 0);

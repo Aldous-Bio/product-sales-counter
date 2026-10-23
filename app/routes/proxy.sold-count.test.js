@@ -89,7 +89,6 @@ describe("proxy.sold-count loader", () => {
     shopFindUniqueMock.mockResolvedValue({
       shopDomain: "shop.myshopify.com",
       ianaTimezone: "UTC",
-      hideWhenZero: false,
     });
     settingFindUniqueMock.mockResolvedValue({ hidden: true });
 
@@ -117,7 +116,6 @@ describe("proxy.sold-count loader", () => {
     shopFindUniqueMock.mockResolvedValue({
       shopDomain: "shop.myshopify.com",
       ianaTimezone: "UTC",
-      hideWhenZero: true,
     });
     getUnitsSoldMock.mockResolvedValue({ unitsSold: 4964, periodDays: 30 });
 
@@ -144,7 +142,6 @@ describe("proxy.sold-count loader", () => {
     shopFindUniqueMock.mockResolvedValue({
       shopDomain: "shop.myshopify.com",
       ianaTimezone: "UTC",
-      hideWhenZero: false,
       minUnitsToShow: 10,
     });
     getUnitsSoldMock.mockResolvedValue({ unitsSold: 9, previewUnits: null, periodDays: 30 });
@@ -164,7 +161,6 @@ describe("proxy.sold-count loader", () => {
     shopFindUniqueMock.mockResolvedValue({
       shopDomain: "shop.myshopify.com",
       ianaTimezone: "UTC",
-      hideWhenZero: true,
       minUnitsToShow: 10,
     });
     getUnitsSoldMock.mockResolvedValue({ unitsSold: 10, previewUnits: null, periodDays: 30 });
@@ -180,12 +176,30 @@ describe("proxy.sold-count loader", () => {
     expect(body.unitsSold).toBe(10);
   });
 
+  it("hides a product with no sales under the default minimum of 1", async () => {
+    appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
+    shopFindUniqueMock.mockResolvedValue({
+      shopDomain: "shop.myshopify.com",
+      ianaTimezone: "UTC",
+      minUnitsToShow: 1,
+    });
+    getUnitsSoldMock.mockResolvedValue({ unitsSold: 0, previewUnits: null, periodDays: 30 });
+
+    const response = await loader({
+      request: makeRequest("product_id=123"),
+      params: {},
+      context: {},
+    });
+    const body = await response.json();
+
+    expect(body).toEqual({ productId: "123", hidden: true });
+  });
+
   it("applies the minimum to the test figure when one is set", async () => {
     appProxyMock.mockResolvedValue({ session: { shop: "shop.myshopify.com" } });
     shopFindUniqueMock.mockResolvedValue({
       shopDomain: "shop.myshopify.com",
       ianaTimezone: "UTC",
-      hideWhenZero: true,
       minUnitsToShow: 10,
     });
     getUnitsSoldMock.mockResolvedValue({ unitsSold: 50, previewUnits: 5, periodDays: 30 });

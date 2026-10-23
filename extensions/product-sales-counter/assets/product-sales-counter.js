@@ -19,7 +19,6 @@
       productId = host && host.getAttribute("data-product-id");
     }
     var locale = container.getAttribute("data-locale") || "en";
-    var forceShowZero = container.getAttribute("data-show-zero") === "true";
 
     if (!productId) return;
 
@@ -35,24 +34,20 @@
       })
       .then(function (data) {
         // `hidden`: the merchant unticked this product in the app's
-        // "Productos" table, which wins over the block's "show zero" setting.
-        var shouldHide =
-          data.hidden ||
-          (data.unitsSold === 0 && data.hideWhenZero && !forceShowZero);
+        // "Productos" table or the product is below the shop's minimum.
+        var shouldHide = data.hidden;
         if (shouldHide) {
           container.remove();
           return;
         }
 
         var text = document.createElement("p");
-        text.className =
-          "product-sales-counter__text m-0 text-right text-lg-left text-secondary-grey-darkest font-light text-xxs text-lg-xs";
+        text.className = "product-sales-counter__text m-0 text-right text-lg-left text-secondary-grey-darkest font-light text-xxs text-lg-xs";
         // messageParts lets the backend emphasize the count without sending
         // HTML; fall back to the plain message if it's missing.
         var parts = data.messageParts || [
           { text: data.message, strong: false },
         ];
-        console.log("datos partes", parts);
         parts.forEach(function (part) {
           if (part.strong) {
             var emphasized = document.createElement("span");

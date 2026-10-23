@@ -75,12 +75,6 @@ export const action = async ({ request }) => {
   const formData = await request.formData();
   const intent = formData.get("intent");
 
-  if (intent === "toggle-hide-when-zero") {
-    const hideWhenZero = formData.get("hideWhenZero") === "true";
-    await prisma.shop.update({ where: { shopDomain: session.shop }, data: { hideWhenZero } });
-    return json({ ok: true });
-  }
-
   const productId = normalizeProductId(String(formData.get("productId") ?? ""));
   if (!productId) {
     return json({ error: "invalid productId" }, { status: 400 });
@@ -195,7 +189,6 @@ function ProductRow({ row, index }) {
 
 export default function Products() {
   const { shop, rows } = useLoaderData();
-  const hideWhenZeroFetcher = useFetcher();
   const [search, setSearch] = useState("");
 
   const filteredRows = useMemo(() => {
@@ -203,8 +196,6 @@ export default function Products() {
     return term ? rows.filter((row) => row.title.toLocaleLowerCase("es").includes(term)) : rows;
   }, [rows, search]);
 
-  const hideWhenZero =
-    hideWhenZeroFetcher.formData ? hideWhenZeroFetcher.formData.get("hideWhenZero") === "true" : shop.hideWhenZero;
   const visibleCount = rows.filter((row) => row.visible).length;
 
   return (
@@ -215,18 +206,8 @@ export default function Products() {
             <BlockStack gap="300">
               <Text as="p">
                 Ventas de los últimos <strong>{shop.windowDays} días</strong> (se cambia en la página de inicio).
-                Marca en qué productos se muestra el contador: {visibleCount} de {rows.length} lo muestran.
+                Puedes marcar en qué productos se muestra el contador: {visibleCount} de {rows.length} lo muestran.
               </Text>
-              <Checkbox
-                label="Ocultar el contador en los productos con 0 unidades vendidas"
-                checked={hideWhenZero}
-                onChange={(checked) =>
-                  hideWhenZeroFetcher.submit(
-                    { intent: "toggle-hide-when-zero", hideWhenZero: String(checked) },
-                    { method: "post" },
-                  )
-                }
-              />
             </BlockStack>
           </Card>
         </Layout.Section>
