@@ -5,7 +5,9 @@ import { describeError } from "../services/backfill.server";
 
 /** refunds/create: re-derive the parent order's rows (see orderSync.server.js). */
 export const action = async ({ request }) => {
-  const { shop, payload } = await authenticate.webhook(request);
+  const { shop, webhookId, payload } = await authenticate.webhook(request);
+  // See webhooks.orders.jsx: lets a failed delivery be matched by webhook id.
+  console.log(`[webhooks/refunds] ${shop} webhookId=${webhookId}`);
 
   const orderLegacyId = payload.order_id;
   if (!orderLegacyId) {
@@ -21,21 +23,25 @@ export const action = async ({ request }) => {
 
   const orderGid = orderGidFromLegacyId(orderLegacyId);
 
+  // Ack right away and sync in the background — see webhooks.orders.jsx.
+  syncOrder(shop, orderGid, shopRecord.ianaTimezone);
+
+  return new Response();
+};
+
+async function syncOrder(shop, orderGid, timeZone) {
   try {
     const { admin } = await unauthenticated.admin(shop);
     await refetchAndUpsertOrder(
       shop,
       { request: (q, o) => admin.graphql(q, o).then((r) => r.json()) },
       orderGid,
-      shopRecord.ianaTimezone,
+      timeZone,
     );
   } catch (error) {
     console.error(`[webhooks/refunds] failed for ${shop} order ${orderGid}`, error);
-    await prisma.shop.update({
-      where: { shopDomain: shop },
-      data: { lastSyncError: describeError(error) },
-    });
+    await prisma.shop
+      .update({ where: { shopDomain: shop }, data: { lastSyncError: describeError(error) } })
+      .catch((e) => console.error(`[webhooks/refunds] could not record sync error for ${shop}`, e));
   }
-
-  return new Response();
-};
+}
