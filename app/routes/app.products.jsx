@@ -1,19 +1,5 @@
 import { json } from "@remix-run/node";
 import { useFetcher, useLoaderData } from "@remix-run/react";
-import {
-  Badge,
-  BlockStack,
-  Box,
-  Card,
-  Checkbox,
-  IndexTable,
-  InlineStack,
-  Layout,
-  Page,
-  Text,
-  TextField,
-  Thumbnail,
-} from "@shopify/polaris";
 import { useEffect, useMemo, useState } from "react";
 import prisma from "../db.server";
 import { PRODUCTS_PAGE_QUERY } from "../graphql/products";
@@ -94,19 +80,13 @@ export const action = async ({ request }) => {
   return json({ ok: true });
 };
 
-// Long product names are cut with an ellipsis (full name on hover) so the
-// table fits the page without horizontal scroll. ~480px is what the other
-// columns + thumbnail + paddings need; the name gets the rest, capped so
-// rows stay compact on wide screens.
-const PRODUCT_TITLE_MAX_WIDTH = "min(460px, max(120px, calc(100vw - 480px)))";
-
 const STATUS_BADGES = {
-  DRAFT: { tone: undefined, label: "Borrador" },
-  ARCHIVED: { tone: undefined, label: "Archivado" },
+  DRAFT: { tone: "neutral", label: "Borrador" },
+  ARCHIVED: { tone: "neutral", label: "Archivado" },
   UNLISTED: { tone: "info", label: "No listado" },
 };
 
-function ProductRow({ row, index }) {
+function ProductRow({ row }) {
   const fetcher = useFetcher();
   const [previewInput, setPreviewInput] = useState(row.previewUnits?.toString() ?? "");
   useEffect(() => setPreviewInput(row.previewUnits?.toString() ?? ""), [row.previewUnits]);
@@ -126,64 +106,53 @@ function ProductRow({ row, index }) {
   const statusBadge = STATUS_BADGES[row.status];
 
   return (
-    <IndexTable.Row id={row.id} position={index}>
-      <IndexTable.Cell>
-        <Checkbox
-          label={`Mostrar contador en ${row.title}`}
-          labelHidden
+    <s-table-row>
+      <s-table-cell>
+        <s-checkbox
+          accessibilityLabel={`Mostrar contador en ${row.title}`}
           checked={visible}
-          onChange={(checked) =>
+          onChange={(event) =>
             fetcher.submit(
-              { intent: "set-visible", productId: row.id, visible: String(checked) },
+              { intent: "set-visible", productId: row.id, visible: String(event.currentTarget.checked) },
               { method: "post" },
             )
           }
         />
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <InlineStack gap="300" blockAlign="center" wrap={false}>
-          {row.imageUrl ? (
-            <Thumbnail source={row.imageUrl} alt={row.imageAlt} size="small" />
-          ) : (
-            <Box width="40px" minHeight="40px" background="bg-surface-secondary" borderRadius="200" />
-          )}
-          <div style={{ maxWidth: PRODUCT_TITLE_MAX_WIDTH, minWidth: 0 }} title={row.title}>
-            <BlockStack gap="050" inlineAlign="start">
-              <Text as="p" fontWeight="medium" tone={visible ? undefined : "subdued"} truncate>
-                {row.title}
-              </Text>
-              {statusBadge ? <Badge tone={statusBadge.tone}>{statusBadge.label}</Badge> : null}
-            </BlockStack>
-          </div>
-        </InlineStack>
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <Text as="span" alignment="end" numeric>
-          {row.unitsSold.toLocaleString("es-ES")}
-        </Text>
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <Box width="120px">
-          <TextField
+      </s-table-cell>
+      <s-table-cell>
+        <s-stack direction="inline" gap="small" alignItems="center">
+          {/* Without src it renders the empty-image placeholder. */}
+          <s-thumbnail src={row.imageUrl ?? undefined} alt={row.imageAlt} size="small" />
+          <s-stack gap="small-500">
+            <s-text fontWeight="medium" color={visible ? "base" : "subdued"}>
+              {row.title}
+            </s-text>
+            {statusBadge ? (
+              <s-stack direction="inline">
+                <s-badge tone={statusBadge.tone}>{statusBadge.label}</s-badge>
+              </s-stack>
+            ) : null}
+          </s-stack>
+        </s-stack>
+      </s-table-cell>
+      <s-table-cell>{row.unitsSold.toLocaleString("es-ES")}</s-table-cell>
+      <s-table-cell>
+        <s-box inlineSize="120px">
+          <s-number-field
             label={`Unidades simuladas para ${row.title}`}
-            labelHidden
-            type="number"
+            labelAccessibilityVisibility="exclusive"
             min={0}
             max={MAX_PREVIEW_UNITS}
-            autoComplete="off"
+            inputMode="numeric"
+            autocomplete="off"
             placeholder="—"
             value={previewInput}
-            onChange={setPreviewInput}
-            onBlur={() => savePreviewUnits(previewInput)}
-            clearButton
-            onClearButtonClick={() => {
-              setPreviewInput("");
-              savePreviewUnits("");
-            }}
+            onInput={(event) => setPreviewInput(event.currentTarget.value)}
+            onBlur={(event) => savePreviewUnits(event.currentTarget.value)}
           />
-        </Box>
-      </IndexTable.Cell>
-    </IndexTable.Row>
+        </s-box>
+      </s-table-cell>
+    </s-table-row>
   );
 }
 
@@ -199,59 +168,52 @@ export default function Products() {
   const visibleCount = rows.filter((row) => row.visible).length;
 
   return (
-    <Page title="Productos" backAction={{ content: "Inicio", url: "/app" }}>
-      <Layout>
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="300">
-              <Text as="p">
-                Ventas de los últimos <strong>{shop.windowDays} días</strong> (se cambia en la página de inicio).
-                Puedes marcar en qué productos se muestra el contador: {visibleCount} de {rows.length} lo muestran.
-              </Text>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+    <s-page heading="Productos">
+      <s-link slot="breadcrumb-actions" href="/app">
+        Inicio
+      </s-link>
 
-        <Layout.Section>
-          <Card padding="0">
-            <Box padding="300">
-              <TextField
-                label="Buscar producto"
-                labelHidden
-                placeholder="Buscar producto"
-                autoComplete="off"
-                value={search}
-                onChange={setSearch}
-                clearButton
-                onClearButtonClick={() => setSearch("")}
-              />
-            </Box>
-            <IndexTable
-              resourceName={{ singular: "producto", plural: "productos" }}
-              itemCount={filteredRows.length}
-              selectable={false}
-              headings={[
-                { title: "Mostrar" },
-                { title: "Producto" },
-                { title: `Vendidas (${shop.windowDays} días)`, alignment: "end" },
-                { title: "Unidades simuladas" },
-              ]}
-              emptyState={
-                <Box padding="400">
-                  <Text as="p" tone="subdued" alignment="center">
-                    {rows.length === 0 ? "Esta tienda no tiene productos." : "Ningún producto coincide con la búsqueda."}
-                  </Text>
-                </Box>
-              }
-            >
-              {filteredRows.map((row, index) => (
-                <ProductRow key={row.id} row={row} index={index} />
-              ))}
-            </IndexTable>
-          </Card>
-        </Layout.Section>
-      </Layout>
-      <Box paddingBlockEnd="800" />
-    </Page>
+      <s-section>
+        <s-paragraph>
+          Ventas de los últimos <s-text type="strong">{shop.windowDays} días</s-text> (se cambia en la página de
+          inicio). Puedes marcar en qué productos se muestra el contador: {visibleCount} de {rows.length} lo
+          muestran.
+        </s-paragraph>
+      </s-section>
+
+      <s-section padding="none" accessibilityLabel="Productos">
+        <s-table>
+          <s-search-field
+            slot="filters"
+            label="Buscar producto"
+            labelAccessibilityVisibility="exclusive"
+            placeholder="Buscar producto"
+            autocomplete="off"
+            value={search}
+            onInput={(event) => setSearch(event.currentTarget.value)}
+          />
+          <s-table-header-row>
+            <s-table-header listSlot="inline">Mostrar</s-table-header>
+            <s-table-header listSlot="primary">Producto</s-table-header>
+            <s-table-header listSlot="labeled" format="numeric">
+              Vendidas ({shop.windowDays} días)
+            </s-table-header>
+            <s-table-header listSlot="labeled">Unidades simuladas</s-table-header>
+          </s-table-header-row>
+          <s-table-body>
+            {filteredRows.map((row) => (
+              <ProductRow key={row.id} row={row} />
+            ))}
+          </s-table-body>
+        </s-table>
+        {filteredRows.length === 0 ? (
+          <s-box padding="base">
+            <s-paragraph color="subdued">
+              {rows.length === 0 ? "Esta tienda no tiene productos." : "Ningún producto coincide con la búsqueda."}
+            </s-paragraph>
+          </s-box>
+        ) : null}
+      </s-section>
+    </s-page>
   );
 }

@@ -1,30 +1,11 @@
 import { json } from "@remix-run/node";
 import { useFetcher, useLoaderData } from "@remix-run/react";
-import { SaveBar, TitleBar, useAppBridge } from "@shopify/app-bridge-react";
-import {
-  Badge,
-  Banner,
-  BlockStack,
-  Box,
-  Card,
-  Divider,
-  InlineStack,
-  Layout,
-  Link,
-  List,
-  Page,
-  Select,
-  Text,
-  TextField,
-} from "@shopify/polaris";
+import { SaveBar, useAppBridge } from "@shopify/app-bridge-react";
 import { useEffect, useState } from "react";
 import prisma from "../db.server";
 import { runReconciliation } from "../services/backfill.server";
 import { MAX_PREVIEW_UNITS, parseMinUnitsToShow } from "../services/productDisplay";
 import { authenticate } from "../shopify.server";
-import dashboardStyles from "../styles/dashboard.css?url";
-
-export const links = () => [{ rel: "stylesheet", href: dashboardStyles }];
 
 // Each option has a natural-language phrase in app/i18n/messages.js (PERIOD_KEYS).
 const WINDOW_DAYS_OPTIONS = [7, 14, 30, 60, 90];
@@ -100,22 +81,18 @@ function useResultToast(fetcher) {
 }
 
 function SyncStatusBadge({ shop, syncing }) {
-  if (syncing || shop.backfillStatus === "running") return <Badge tone="info">Sincronizando</Badge>;
-  if (shop.lastSyncError || shop.backfillStatus === "failed") return <Badge tone="critical">Con errores</Badge>;
-  if (shop.backfillStatus === "pending") return <Badge>Pendiente</Badge>;
-  return <Badge tone="success">Al día</Badge>;
+  if (syncing || shop.backfillStatus === "running") return <s-badge tone="info">Sincronizando</s-badge>;
+  if (shop.lastSyncError || shop.backfillStatus === "failed") return <s-badge tone="critical">Con errores</s-badge>;
+  if (shop.backfillStatus === "pending") return <s-badge tone="neutral">Pendiente</s-badge>;
+  return <s-badge tone="success">Al día</s-badge>;
 }
 
 function Metric({ title, children }) {
   return (
-    <Box paddingBlock="200" paddingInline="400">
-      <BlockStack gap="200">
-        <Text as="h2" variant="headingSm">
-          {title}
-        </Text>
-        {children}
-      </BlockStack>
-    </Box>
+    <s-stack gap="small-200">
+      <s-heading>{title}</s-heading>
+      {children}
+    </s-stack>
   );
 }
 
@@ -149,12 +126,10 @@ export default function Dashboard() {
   const syncNow = () => syncFetcher.submit({ intent: "reconcile" }, { method: "post" });
 
   return (
-    <Page>
-      <TitleBar>
-        <button variant="primary" onClick={syncNow} disabled={syncing} loading={syncing ? "" : undefined}>
-          Sincronizar ahora
-        </button>
-      </TitleBar>
+    <s-page>
+      <s-button slot="primary-action" variant="primary" onClick={syncNow} loading={syncing}>
+        Sincronizar ahora
+      </s-button>
       <SaveBar id="settings-save-bar" open={dirty}>
         <button variant="primary" onClick={saveSettings} disabled={saving} loading={saving ? "" : undefined}>
           Guardar
@@ -164,106 +139,89 @@ export default function Dashboard() {
         </button>
       </SaveBar>
 
-      <Layout>
-        <Layout.Section>
-          <BlockStack gap="400">
-            <Card>
-              <div className="metrics">
-                <Metric title="Estado de los datos">
-                  <InlineStack>
-                    <SyncStatusBadge shop={shop} syncing={syncing} />
-                  </InlineStack>
-                </Metric>
-                <Metric title="Última sincronización">
-                  <Text as="p" tone={lastSyncAt ? undefined : "subdued"}>
-                    {lastSyncAt ? formatDate(lastSyncAt, shop.ianaTimezone) : "Todavía no se ha ejecutado"}
-                  </Text>
-                </Metric>
-                <Metric title="Zona horaria">
-                  <Text as="p">{shop.ianaTimezone}</Text>
-                </Metric>
-              </div>
-            </Card>
+      {shop.backfillError ? (
+        <s-banner slot="supplemental-start" tone="critical" heading="La carga inicial ha fallado">
+          {shop.backfillError}
+        </s-banner>
+      ) : null}
+      {shop.lastSyncError ? (
+        <s-banner slot="supplemental-start" tone="critical" heading="La última sincronización ha fallado">
+          {shop.lastSyncError}
+        </s-banner>
+      ) : null}
 
-            {shop.backfillError ? (
-              <Banner tone="critical" title="La carga inicial ha fallado">
-                <p>{shop.backfillError}</p>
-              </Banner>
-            ) : null}
-            {shop.lastSyncError ? (
-              <Banner tone="critical" title="La última sincronización ha fallado">
-                <p>{shop.lastSyncError}</p>
-              </Banner>
-            ) : null}
+      <s-section accessibilityLabel="Estado de la sincronización">
+        {/* Three columns, stacked when the section is narrow. */}
+        <s-query-container>
+          <s-grid gridTemplateColumns="@container (inline-size > 500px) 1fr 1fr 1fr, 1fr" gap="base">
+            <Metric title="Estado de los datos">
+              <s-stack direction="inline">
+                <SyncStatusBadge shop={shop} syncing={syncing} />
+              </s-stack>
+            </Metric>
+            <Metric title="Última sincronización">
+              <s-paragraph color={lastSyncAt ? "base" : "subdued"}>
+                {lastSyncAt ? formatDate(lastSyncAt, shop.ianaTimezone) : "Todavía no se ha ejecutado"}
+              </s-paragraph>
+            </Metric>
+            <Metric title="Zona horaria">
+              <s-paragraph>{shop.ianaTimezone}</s-paragraph>
+            </Metric>
+          </s-grid>
+        </s-query-container>
+      </s-section>
 
-            <Card>
-              <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">
-                  Ajustes
-                </Text>
-                <Select
-                  label="Periodo de cálculo"
-                  helpText="Días hacia atrás que se tienen en cuenta para contar las ventas, tanto al sincronizar como en el número que se muestra en la tienda."
-                  options={WINDOW_DAYS_OPTIONS.map((days) => ({ label: `${days} días`, value: String(days) }))}
-                  value={windowDays}
-                  onChange={setWindowDays}
-                />
-                <Divider />
-                <TextField
-                  label="Mínimo de unidades vendidas"
-                  helpText="El contador solo se muestra en los productos que hayan vendido al menos estas unidades en el periodo. Con 0 se muestra siempre, también sin ventas."
-                  type="number"
-                  min={0}
-                  max={MAX_PREVIEW_UNITS}
-                  autoComplete="off"
-                  value={minUnits}
-                  onChange={setMinUnits}
-                />
-              </BlockStack>
-            </Card>
-          </BlockStack>
-        </Layout.Section>
+      <s-section heading="Ajustes">
+        <s-stack gap="base">
+          <s-select
+            label="Periodo de cálculo"
+            details="Días hacia atrás que se tienen en cuenta para contar las ventas, tanto al sincronizar como en el número que se muestra en la tienda."
+            value={windowDays}
+            onChange={(event) => setWindowDays(event.currentTarget.value)}
+          >
+            {WINDOW_DAYS_OPTIONS.map((days) => (
+              <s-option key={days} value={String(days)}>
+                {days} días
+              </s-option>
+            ))}
+          </s-select>
+          <s-divider />
+          <s-number-field
+            label="Mínimo de unidades vendidas"
+            details="El contador solo se muestra en los productos que hayan vendido al menos estas unidades en el periodo. Con 0 se muestra siempre, también sin ventas."
+            min={0}
+            max={MAX_PREVIEW_UNITS}
+            inputMode="numeric"
+            autocomplete="off"
+            value={minUnits}
+            onInput={(event) => setMinUnits(event.currentTarget.value)}
+          />
+        </s-stack>
+      </s-section>
 
-        <Layout.Section variant="oneThird">
-          <BlockStack gap="400">
-            <Card>
-              <BlockStack gap="300">
-                <Text as="h2" variant="headingMd">
-                  Cómo funciona
-                </Text>
-                <Text as="p">
-                  Cuenta las unidades vendidas de cada producto en los últimos {shop.windowDays} días, según la
-                  hora de la tienda:
-                </Text>
-                <List>
-                  <List.Item>Solo pedidos pagados, descontando reembolsos y devoluciones</List.Item>
-                  <List.Item>Sin pedidos cancelados ni tarjetas regalo</List.Item>
-                  <List.Item>Se actualiza solo con cada pedido o reembolso</List.Item>
-                </List>
-                <Text as="p">
-                  En <Link url="/app/products">Productos</Link> eliges en qué productos se muestra el contador.
-                </Text>
-                <Text as="p" tone="subdued">
-                  Usa «Sincronizar ahora» si ves alguna cifra desajustada.
-                </Text>
-              </BlockStack>
-            </Card>
+      <s-section slot="aside" heading="Cómo funciona">
+        <s-stack gap="small-200">
+          <s-paragraph>
+            Cuenta las unidades vendidas de cada producto en los últimos {shop.windowDays} días, según la hora de la
+            tienda:
+          </s-paragraph>
+          <s-unordered-list>
+            <s-list-item>Solo pedidos pagados, descontando reembolsos y devoluciones</s-list-item>
+            <s-list-item>Sin pedidos cancelados ni tarjetas regalo</s-list-item>
+            <s-list-item>Se actualiza solo con cada pedido o reembolso</s-list-item>
+          </s-unordered-list>
+          <s-paragraph>
+            En <s-link href="/app/products">Productos</s-link> eliges en qué productos se muestra el contador.
+          </s-paragraph>
+          <s-paragraph color="subdued">Usa «Sincronizar ahora» si ves alguna cifra desajustada.</s-paragraph>
+        </s-stack>
+      </s-section>
 
-            <Card>
-              <BlockStack gap="300">
-                <Text as="h2" variant="headingMd">
-                  Cómo añadirlo a la tienda
-                </Text>
-                <Text as="p">
-                  En el editor de temas, abre la plantilla de producto y añade el bloque de app «Unidades
-                  vendidas».
-                </Text>
-              </BlockStack>
-            </Card>
-          </BlockStack>
-        </Layout.Section>
-      </Layout>
-      <Box paddingBlockEnd="800" />
-    </Page>
+      <s-section slot="aside" heading="Cómo añadirlo a la tienda">
+        <s-paragraph>
+          En el editor de temas, abre la plantilla de producto y añade el bloque de app «Unidades vendidas».
+        </s-paragraph>
+      </s-section>
+    </s-page>
   );
 }

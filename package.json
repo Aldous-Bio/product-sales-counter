@@ -31,13 +31,12 @@
     "@remix-run/react": "^2.16.1",
     "@remix-run/serve": "^2.16.1",
     "@shopify/app-bridge-react": "^4.1.6",
-    "@shopify/polaris": "^12.0.0",
     "@shopify/shopify-app-remix": "^5.0.1",
     "@shopify/shopify-app-session-storage-prisma": "^10.0.1",
     "isbot": "^5.1.0",
     "prisma": "^6.2.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "eslint": "^8.42.0",
@@ -55,5 +54,19 @@
   "private": true,
   "workspaces": [
     "extensions/*"
-  ]
+  ],
+  "overrides": {
+    "@remix-run/react": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@remix-run/dev": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@remix-run/server-runtime": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
+  }
 }
