@@ -1,6 +1,7 @@
 import { json } from "@remix-run/node";
 import prisma from "../db.server";
 import { runReconciliation } from "../services/backfill.server";
+import { isValidSharedSecret } from "../services/sharedSecret.server";
 import { unauthenticated } from "../shopify.server";
 
 /**
@@ -17,9 +18,7 @@ export const action = async ({ request }) => {
     return json({ error: "method not allowed" }, { status: 405 });
   }
 
-  const secret = process.env.RECONCILE_SECRET;
-  const provided = request.headers.get("x-reconcile-secret");
-  if (!secret || provided !== secret) {
+  if (!isValidSharedSecret(request.headers.get("x-reconcile-secret"), process.env.RECONCILE_SECRET)) {
     return json({ error: "unauthorized" }, { status: 401 });
   }
 
